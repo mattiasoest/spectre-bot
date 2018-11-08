@@ -6,19 +6,20 @@ const STREAMS_TO_BE_JOINED = 2;
 // setInterval(function() {
 var FETCHED_STREAMERS = [];
 var SELECTED_STREAMERS = [];
+var STREAM_OBJECTS = [];
   //clearTimeout(); to break the interval
   // for example if the channel is offline
 
-  getRandomStreamers().then(function () {
+  populateStreamerArrays().then(function () {
   var options = createOptions();
 
+  createStreamers();
   var kappaCount = 0;
   var client = new tmi.client(options);
-  client.connect();
-
   console.log("Preparing connection to:", SELECTED_STREAMERS);
   console.log();
   console.log("===============================================================");
+  client.connect();
   client.on("connected", function(address, port){
     console.log("Connected...");
     // console.log("Joined the channels:", SELECTED_STREAMERS);
@@ -79,7 +80,7 @@ function randomlyPopulateSelectedStreamers() {
       let elementToBeAdded = fetchedCopy.splice(randomIndex, 1)[0];
       SELECTED_STREAMERS.push(elementToBeAdded);
       // pickedElements.push(elementToBeAdded);
-      console.log("Randomly picked streamer: " +  elementToBeAdded);
+      console.log("Randomly picked streamer:" , elementToBeAdded);
       requestedAmount--;
     }
     console.log();
@@ -125,7 +126,7 @@ function getStreamerData(limit) {
     });
 }
 
-async function getRandomStreamers() {
+async function populateStreamerArrays() {
   try {
       let result = await getStreamerData(REQUEST_STREAM_LIMIT);
       populateFetchedStreamers(result);
@@ -150,4 +151,29 @@ function createOptions() {
     },
     channels : SELECTED_STREAMERS
   }
+}
+
+function createStreamers() {
+  for (streamerName of SELECTED_STREAMERS) {
+    let streamer = {};
+    streamer.name = streamerName;
+    streamer.kappaCount = 0;
+    streamer.trihardCount = 0;
+    streamer.pogchampCount = 0;
+    streamer.fourheadCount = 0;
+    streamer.cmonbruhCount = 0;
+    streamer.lulCount = 0;
+    streamer.hahaaCount = 0;
+    streamer.sourplsCount = 0;
+    streamer.feeldgoodmanCount = 0;
+    streamer.feelsbadmanCount = 0;
+    streamer.gachigasmCount = 0;
+    streamer.monkasCount = 0;
+    streamer.poggersCount = 0;
+    streamer.pepehandsCount = 0;
+    streamer.mrdestructroid = 0;
+    streamer.jebaitedCount = 0;
+    STREAM_OBJECTS.push(streamer);
+  }
+  console.log("Created streamer objects:", STREAM_OBJECTS);
 }
