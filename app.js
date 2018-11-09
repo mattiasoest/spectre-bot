@@ -21,8 +21,7 @@ var FETCHED_STREAMERS = [];
 var STREAM_CONNECTIONS = [];
 // The actual stream objects
 var STREAMERS = [];
-  //clearTimeout(); to break the interval
-  // for example if the channel is offline
+
 populateStreamerArrays().then(function () {
   var options = createOptions();
   var client = new tmi.client(options);
@@ -32,8 +31,7 @@ populateStreamerArrays().then(function () {
   client.connect();
   client.on("connected", function(address, port){
     console.log("Connected...");
-    // console.log("Joined the channels:", SELECTED_STREAMERS);
-    // client.action("GhettoProgrammer", "Hello twitch chat!");
+    // client.action("<name>", "Hello twitch chat!");
   });
 
   client.on('disconnected', function(reason){
@@ -72,7 +70,6 @@ populateStreamerArrays().then(function () {
     //         responseMsg = "Hi @" + user['display-name'];
     //         client.action(channel, responseMsg);
   });
-
 });
 // ============================================================================
 
