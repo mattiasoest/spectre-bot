@@ -4,19 +4,19 @@ const request = require('request');
 const REQUEST_STREAM_LIMIT = 5;
 const STREAMS_TO_BE_JOINED = 2;
 // setInterval(function() {
+
 var FETCHED_STREAMERS = [];
-var SELECTED_STREAMERS = [];
-var STREAM_OBJECTS = [];
+// Contains just the names and is used as options to connect
+var STREAM_CONNECTIONS = [];
+// The actual stream objects
+var STREAMERS = [];
   //clearTimeout(); to break the interval
   // for example if the channel is offline
 
   populateStreamerArrays().then(function () {
   var options = createOptions();
-
-  createStreamers();
-  var kappaCount = 0;
   var client = new tmi.client(options);
-  console.log("Preparing connection to:", SELECTED_STREAMERS);
+  console.log("Preparing connection to:", STREAM_CONNECTIONS);
   console.log();
   console.log("===============================================================");
   client.connect();
@@ -56,7 +56,7 @@ var STREAM_OBJECTS = [];
     // }
 
     // console.log(channel + ": " + user + ": " + message);
-    console.log(`[${channel} (${user['message-type']})] ${user.username}: ${message}`);
+    // console.log(`[${channel} (${user['message-type']})] ${user.username}: ${message}`);
   });
 // }, 10000);
 })
@@ -65,25 +65,29 @@ var STREAM_OBJECTS = [];
 
 function randomlyPopulateSelectedStreamers() {
     console.log("Starting the picking process...");
-    // Just return all of the streamers if we want more than we have
+    // Just grab all of the streamers names if we want more than we have
     let requestedAmount = STREAMS_TO_BE_JOINED;
     if (requestedAmount >= FETCHED_STREAMERS.length) {
-      SELECTED_STREAMERS = FETCHED_STREAMERS.slice();
-      return;
+      FETCHED_STREAMERS.forEach((streamer) => STREAM_CONNECTIONS.push(streamer.name));
     }
-    let fetchedCopy = FETCHED_STREAMERS.slice();
-    // let pickedElements = [];
-    while (requestedAmount > 0) {
-      let randomIndex = Math.floor(Math.random() * fetchedCopy.length);
-      // Pick random streamer and delete him at the same time
-      // from the original array
-      let elementToBeAdded = fetchedCopy.splice(randomIndex, 1)[0];
-      SELECTED_STREAMERS.push(elementToBeAdded);
-      // pickedElements.push(elementToBeAdded);
-      console.log("Randomly picked streamer:" , elementToBeAdded);
-      requestedAmount--;
-    }
-    console.log();
+    else {
+      //TODO MAYBE used the FETCHED_STREAMERS so we dont hold all the unsued data
+      //TODO for unconnected streams until next random connection phase
+      let fetchedCopy = FETCHED_STREAMERS.slice();
+      while (requestedAmount > 0) {
+        let randomIndex = Math.floor(Math.random() * fetchedCopy.length);
+        // Pick random streamer and delete him at the same time
+        // from the original array
+        let streamerData = fetchedCopy.splice(randomIndex, 1)[0];
+        addAdditionalAttributes(streamerData);
+        // Add just the name to the array used to connect
+        STREAM_CONNECTIONS.push(streamerData.name);
+        STREAMERS.push(streamerData);
+        console.log("Randomly picked streamer:" , streamerData.name);
+        requestedAmount--;
+      }
+      console.log();
+  }
 }
 function populateFetchedStreamers(body) {
   // console.log('body---->>', body);
@@ -91,8 +95,11 @@ function populateFetchedStreamers(body) {
   console.log("===============================================================");
 
   for (var i = 0; i < body.streams.length; i++) {
-    let streamer = body.streams[i].channel.name;
-    console.log("Adding streamer:", streamer);
+    let streamer = {};
+    streamer.name = body.streams[i].channel.name;
+    streamer.logo = body.streams[i].channel.logo;
+    streamer.url = body.streams[i].channel.url;
+    console.log("Fetching streamer data from:", streamer.name);
     FETCHED_STREAMERS.push(streamer);
   }
   console.log();
@@ -110,7 +117,6 @@ function getStreamerData(limit) {
   };
 
   return new Promise(function(resolve, reject) {
-
     request(options, function(err, res, body) {
       if (err) {
         console.log(err);  // Log the error if one occurred
@@ -149,14 +155,11 @@ function createOptions() {
       username : consts.userName,
       password : consts.twitchPass
     },
-    channels : SELECTED_STREAMERS
+    channels : STREAM_CONNECTIONS
   }
 }
 
-function createStreamers() {
-  for (streamerName of SELECTED_STREAMERS) {
-    let streamer = {};
-    streamer.name = streamerName;
+function addAdditionalAttributes(streamer) {
     streamer.kappaCount = 0;
     streamer.trihardCount = 0;
     streamer.pogchampCount = 0;
@@ -173,7 +176,4 @@ function createStreamers() {
     streamer.pepehandsCount = 0;
     streamer.mrdestructroid = 0;
     streamer.jebaitedCount = 0;
-    STREAM_OBJECTS.push(streamer);
-  }
-  console.log("Created streamer objects:", STREAM_OBJECTS);
 }
