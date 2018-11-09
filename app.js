@@ -9,10 +9,9 @@ const SUPPORTED_EMOTES = ["Kappa", "TriHard", "PogChamp", "4Head",
 
 const REQUEST_STREAM_LIMIT = 5;
 const STREAMS_TO_BE_JOINED = 3;
-
-//TODO
-// Rejoin STREAMS_TO_BE_JOINED new channels after specific time
-// Reset all streamer data arrays
+// Time to be in the channels before switching
+// const LIVE_TIME = 1000*60*60;
+const LIVE_TIME = 1000*10; // Dummy value for testing
 
 var FETCHED_STREAMERS = [];
 // STREAM_CONNECTIONS contains just the names and is used as options to
@@ -22,13 +21,58 @@ var STREAM_CONNECTIONS = [];
 // The actual stream objects
 var STREAMERS = [];
 
-populateStreamerArrays().then(function () {
-  var options = createOptions();
-  var client = new tmi.client(options);
-  console.log("Preparing connection to:", STREAM_CONNECTIONS);
-  console.log();
-  console.log("===============================================================");
-  client.connect();
+// ============================================================================
+// Start the app
+main();
+// ============================================================================
+
+
+// Implementation
+function main() {
+
+  populateStreamerArrays().then(function () {
+    var options = createOptions();
+    var client = new tmi.client(options);
+    console.log("Preparing connection to:", STREAM_CONNECTIONS);
+    console.log();
+    console.log("===============================================================");
+    client.connect();
+    registerListeners(client);
+    // Keep the connections until LIVE_TIME has passed and then reset everything
+    // Rejoin STREAMS_TO_BE_JOINED channels after specific time
+    setTimeout(function (){
+      // TODO TWEET THE STATS AND THEN JOIN NEW TWITCH CHANNELS
+      // Just log it for now
+      for (streamer of STREAMERS) {
+        console.log("===============================================================");
+        console.log(streamer.displayName);
+        console.log("Collected: ");
+        console.log(streamer.emotes);
+        console.log();
+      }
+
+      console.log("\nDISCONNECTING... PREPARING NEW CONNECTIONS!\n");
+      // After successfull disconnect go back to top of main()
+      client.disconnect().then(function () {
+
+        // Reset all streamer data arrays
+        var FETCHED_STREAMERS = [];
+        var STREAM_CONNECTIONS = [];
+        var STREAMERS = [];
+
+        main();
+        }
+      ).catch(function(err) {
+        console.log("Caught error during disconnect:", err);
+          //
+      });
+    }, LIVE_TIME);
+
+  });
+}
+
+// ============================================================================
+function registerListeners(client) {
   client.on("connected", function(address, port){
     console.log("Connected...");
     // client.action("<name>", "Hello twitch chat!");
@@ -36,7 +80,6 @@ populateStreamerArrays().then(function () {
 
   client.on('disconnected', function(reason){
     console.log("Disconnected:", reason)
-    process.exit(1)
   })
 
   client.on("chat", function(channel, user, message, self) {
@@ -58,21 +101,17 @@ populateStreamerArrays().then(function () {
               console.log("Channel: " + channel + "got +1 of: " + supportedEmote);
               console.log("Currently has a total of: " + streamer.emotes[supportedEmote]);
               console.log();
-          }
-          else {
-            // Normal msg... do something fun
-            //TODO commands??
+            }
+            else {
+              // Normal msg... do something fun
+              //TODO commands??
+            }
           }
         }
       }
-    }
-    //       else if (message.toUpperCase() === "HI") {
-    //         responseMsg = "Hi @" + user['display-name'];
-    //         client.action(channel, responseMsg);
   });
-});
-// ============================================================================
-
+}
+// Helper founctions
 
 function randomlyPopulateSelectedStreamers() {
     console.log("Starting the picking process...");
