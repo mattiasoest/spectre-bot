@@ -9,7 +9,10 @@ const SUPPORTED_EMOTES = ["Kappa", "TriHard", "PogChamp", "4Head",
 
 const REQUEST_STREAM_LIMIT = 5;
 const STREAMS_TO_BE_JOINED = 3;
-// setInterval(function() {
+
+//TODO
+// Rejoin STREAMS_TO_BE_JOINED new channels after specific time
+// Reset all streamer data arrays
 
 var FETCHED_STREAMERS = [];
 // STREAM_CONNECTIONS contains just the names and is used as options to
@@ -20,7 +23,7 @@ var STREAM_CONNECTIONS = [];
 var STREAMERS = [];
   //clearTimeout(); to break the interval
   // for example if the channel is offline
-  populateStreamerArrays().then(function () {
+populateStreamerArrays().then(function () {
   var options = createOptions();
   var client = new tmi.client(options);
   console.log("Preparing connection to:", STREAM_CONNECTIONS);
@@ -69,8 +72,8 @@ var STREAMERS = [];
     //         responseMsg = "Hi @" + user['display-name'];
     //         client.action(channel, responseMsg);
   });
-// }, 10000);
-})
+
+});
 // ============================================================================
 
 
@@ -100,6 +103,7 @@ function randomlyPopulateSelectedStreamers() {
       console.log();
   }
 }
+
 function populateFetchedStreamers(body) {
   // console.log('body---->>', body);
   console.log('Number of streamers fetched:', body.streams.length);
