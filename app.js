@@ -1,18 +1,25 @@
 var tmi = require("tmi.js");
 var consts =  require("./consts"); // no need for .js
 const request = require('request');
+
+const SUPPORTED_EMOTES = ["Kappa", "TriHard", "PogChamp", "4Head",
+ "cmonBruh", "LUL", "EZ", "FailFish", "MingLee", "BibleThump", "Jebaited",
+  "DansGame", "KappaPride", "WutFace", "BabyRage", "SeemsGood", "MrDestructoid", "PixelBob"];
+
+
 const REQUEST_STREAM_LIMIT = 5;
-const STREAMS_TO_BE_JOINED = 2;
+const STREAMS_TO_BE_JOINED = 3;
 // setInterval(function() {
 
 var FETCHED_STREAMERS = [];
-// Contains just the names and is used as options to connect
+// STREAM_CONNECTIONS contains just the names and is used as options to
+// connect with '#' before the channel name which is added automatically
+// after the call to new tmi.client with options
 var STREAM_CONNECTIONS = [];
 // The actual stream objects
 var STREAMERS = [];
   //clearTimeout(); to break the interval
   // for example if the channel is offline
-
   populateStreamerArrays().then(function () {
   var options = createOptions();
   var client = new tmi.client(options);
@@ -36,27 +43,31 @@ var STREAMERS = [];
         // Ignore the bot's msg's
         return;
       }
-
-    // console.log(channel);
-    // let responseMsg = "";
-    // switch (channel.toUpperCase()) {
-    //   case '#GHETTOPROGRAMMER':
-    //       console.log("GhettoProgrammer's channel");
-    //       if (message === "Kappa") {
-    //         kappaCount++;
-    //         responseMsg = "Current Kappa count : " + kappaCount;
-    //         client.action("GhettoProgrammer", responseMsg);
-    //       }
+      // Looks ugly but both arrays are bounded by
+      // pre-defined constants so the loops are executed in O(1) time
+      // message.includes is upper bound
+      for (streamer of STREAMERS) {
+        let currentChannelName = "#" + streamer.name;
+        if (currentChannelName === channel) {
+          for (supportedEmote of SUPPORTED_EMOTES) {
+            if (message.includes(supportedEmote)) {
+              // Its an supported emote, add +1 to the current channel
+              streamer.emotes[supportedEmote]++;
+              console.log();
+              console.log("Channel: " + channel + "got +1 of: " + supportedEmote);
+              console.log("Currently has a total of: " + streamer.emotes[supportedEmote]);
+              console.log();
+          }
+          else {
+            // Normal msg... do something fun
+            //TODO commands??
+          }
+        }
+      }
+    }
     //       else if (message.toUpperCase() === "HI") {
     //         responseMsg = "Hi @" + user['display-name'];
-    //         client.action("GhettoProgrammer", responseMsg);
-    //       }
-    //     break;
-    //   default:
-    // }
-
-    // console.log(channel + ": " + user + ": " + message);
-    // console.log(`[${channel} (${user['message-type']})] ${user.username}: ${message}`);
+    //         client.action(channel, responseMsg);
   });
 // }, 10000);
 })
@@ -96,6 +107,7 @@ function populateFetchedStreamers(body) {
 
   for (var i = 0; i < body.streams.length; i++) {
     let streamer = {};
+    streamer.displayName = body.streams[i].channel.display_name;
     streamer.name = body.streams[i].channel.name;
     streamer.logo = body.streams[i].channel.logo;
     streamer.url = body.streams[i].channel.url;
@@ -160,20 +172,42 @@ function createOptions() {
 }
 
 function addAdditionalAttributes(streamer) {
-    streamer.kappaCount = 0;
-    streamer.trihardCount = 0;
-    streamer.pogchampCount = 0;
-    streamer.fourheadCount = 0;
-    streamer.cmonbruhCount = 0;
-    streamer.lulCount = 0;
-    streamer.hahaaCount = 0;
-    streamer.sourplsCount = 0;
-    streamer.feeldgoodmanCount = 0;
-    streamer.feelsbadmanCount = 0;
-    streamer.gachigasmCount = 0;
-    streamer.monkasCount = 0;
-    streamer.poggersCount = 0;
-    streamer.pepehandsCount = 0;
-    streamer.mrdestructroid = 0;
-    streamer.jebaitedCount = 0;
+    let emotes = {
+        "Kappa": 0
+      , "TriHard": 0
+      , "PogChamp": 0
+      , "4Head": 0
+      , "cmonBruh": 0
+      , "LUL": 0
+      , "EZ": 0
+      , "FailFish": 0
+      , "MingLee": 0
+      , "BibleThump": 0
+      , "Jebaited": 0
+      , "DansGame": 0
+      , "KappaPride": 0
+      , "WutFace": 0
+      , "BabyRage": 0
+      , "SeemsGood": 0
+      , "MrDestructoid": 0
+      , "PixelBob": 0
+    }
+    streamer.emotes = emotes;
+    // streamer.kappaCount = 0;
+    // streamer.trihardCount = 0;
+    // streamer.pogchampCount = 0;
+    // streamer.fourheadCount = 0;
+    // streamer.cmonbruhCount = 0;
+    // streamer.lulCount = 0;
+    // streamer.ezCount = 0;
+    // streamer.mingLeeCount = 0;
+    // streamer.bibleThumpCount = 0;
+    // streamer.jebaitedCount = 0;
+    // streamer.dansGameCount = 0;
+    // streamer.kappaPride = 0;
+    // streamer.wutFaceCount = 0;
+    // streamer.babyRageCount = 0;
+    // streamer.seemsGoodCount = 0;
+    // streamer.mrdestructroid = 0;
+    // streamer.pixelBobCount = 0;
 }
