@@ -1,6 +1,7 @@
 var tmi = require("tmi.js");
 var consts =  require("./consts");
 const request = require('request');
+const fs = require('fs');
 
 const SUPPORTED_EMOTES = ["Kappa", "TriHard", "PogChamp", "4Head",
  "cmonBruh", "LUL", "EZ", "FailFish", "MingLee", "BibleThump", "Jebaited",
@@ -148,12 +149,13 @@ function randomlyPopulateSelectedStreamers() {
         let randomIndex = Math.floor(Math.random() * fetchedCopy.length);
         // Pick random streamer and delete him at the same time
         // from the original array
-        let streamerData = fetchedCopy.splice(randomIndex, 1)[0];
+        var streamerData = fetchedCopy.splice(randomIndex, 1)[0];
+        console.log("Randomly picked streamer:" , streamerData.name);
         addAdditionalAttributes(streamerData);
+
         // Add just the name to the array used to connect
         STREAM_CONNECTIONS.push(streamerData.name);
         STREAMERS.push(streamerData);
-        console.log("Randomly picked streamer:" , streamerData.name);
         requestedAmount--;
       }
       console.log();
@@ -169,7 +171,7 @@ function populateFetchedStreamers(body) {
     let streamer = {};
     streamer.displayName = body.streams[i].channel.display_name;
     streamer.name = body.streams[i].channel.name;
-    streamer.logo = body.streams[i].channel.logo;
+    streamer.logoUrl = body.streams[i].channel.logo;
     streamer.url = body.streams[i].channel.url;
     console.log("Fetching streamer data from:", streamer.name);
     FETCHED_STREAMERS.push(streamer);
@@ -192,7 +194,7 @@ function getStreamerData(limit) {
     request(options, function(err, res, body) {
       if (err) {
         console.log(err);  // Log the error if one occurred
-        reject("ERROR" + response.statusCode);
+        reject("ERROR" + res.statusCode);
         return;
       }
       else {
@@ -231,7 +233,9 @@ function createOptions() {
   }
 }
 
-function addAdditionalAttributes(streamer) {
+async function addAdditionalAttributes(streamer) {
+    console.log("Downloading logo for streamer :", streamer.name);
+    var imageLogo = await downloadFile(streamer.logoUrl);
     let emotes = {
         "Kappa": 0
       , "TriHard": 0
@@ -252,6 +256,7 @@ function addAdditionalAttributes(streamer) {
       , "MrDestructoid": 0
       , "PixelBob": 0
     }
+    streamer.logo = imageLogo;
     streamer.emotes = emotes;
     // streamer.kappaCount = 0;
     // streamer.trihardCount = 0;
@@ -277,4 +282,22 @@ function broadcastMsg(message) {
     // client.action(streamerChannel, "Hello twitch chat!");
     console.log(message, streamerChannel);
   }
+}
+
+function downloadFile(url) {
+    var opts = {url, encoding: 'base64'}
+    return new Promise(function(resolve, reject) {
+      request(opts, function(err, res, body) {
+        if (err) {
+          console.log(err);  // Log the error if one occurred
+          reject("ERROR code for image logo download" + res.statusCode);
+          return;
+        }
+        else {
+          console.log('statusCode for image logo download:', res.statusCode); // Print the response status code if a response was received
+          console.log();
+          resolve(body);
+        }
+        });
+      });
 }
