@@ -29,15 +29,17 @@ main();
 
 // Implementation
 function main() {
-
   populateStreamerArrays().then(function () {
     var options = createOptions();
     var client = new tmi.client(options);
+
+    registerListeners(client);
+
     console.log("Preparing connection to:", STREAM_CONNECTIONS);
     console.log();
     console.log("===============================================================");
     client.connect();
-    registerListeners(client);
+
     // Keep the connections until LIVE_TIME has passed and then reset everything
     // Rejoin STREAMS_TO_BE_JOINED channels after specific time
     setTimeout(function (){
@@ -54,12 +56,14 @@ function main() {
       console.log("\nDISCONNECTING... PREPARING NEW CONNECTIONS!\n");
       // After successfull disconnect go back to top of main()
       client.disconnect().then(function () {
-
         // Reset all streamer data arrays
-        var FETCHED_STREAMERS = [];
-        var STREAM_CONNECTIONS = [];
-        var STREAMERS = [];
+        FETCHED_STREAMERS = [];
+        STREAM_CONNECTIONS = [];
+        STREAMERS = [];
 
+        console.log("After RESET: ", FETCHED_STREAMERS);
+        console.log("After RESET: ", STREAM_CONNECTIONS);
+        console.log("After RESET: ", STREAMERS);
         main();
         }
       ).catch(function(err) {
@@ -73,10 +77,26 @@ function main() {
 
 // ============================================================================
 function registerListeners(client) {
-  client.on("connected", function(address, port){
-    console.log("Connected...");
-    // client.action("<name>", "Hello twitch chat!");
+
+  client.on("join", function (channel, username, self) {
+    // Bot joined broadcast msg
+    if (self) {
+      // client.action(streamerChannel, "Hello twitch chat!");
+      // TODO just log for now.
+      console.log(channel, "HELLO TWITCH CHAT =)");
+    }
+    else {
+        // random users joined...
+        // do something fun?
+    }
   });
+
+  // Adress looks something like
+  // irc-ws.chat.twitch.tv
+  client.on("connected", function(address, port){
+
+  });
+
 
   client.on('disconnected', function(reason){
     console.log("Disconnected:", reason)
@@ -250,4 +270,11 @@ function addAdditionalAttributes(streamer) {
     // streamer.seemsGoodCount = 0;
     // streamer.mrdestructroid = 0;
     // streamer.pixelBobCount = 0;
+}
+
+function broadcastMsg(message) {
+  for (streamerChannel of STREAM_CONNECTIONS) {
+    // client.action(streamerChannel, "Hello twitch chat!");
+    console.log(message, streamerChannel);
+  }
 }
