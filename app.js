@@ -1,5 +1,5 @@
 var tmi = require("tmi.js");
-var consts =  require("./consts"); // no need for .js
+var consts =  require("./consts");
 const request = require('request');
 
 const SUPPORTED_EMOTES = ["Kappa", "TriHard", "PogChamp", "4Head",
