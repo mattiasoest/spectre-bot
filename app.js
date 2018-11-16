@@ -9,22 +9,24 @@ const SUPPORTED_EMOTES = ["Kappa", "TriHard", "PogChamp", "4Head",
   "DansGame", "KappaPride", "WutFace", "BabyRage", "SeemsGood"];
 
 
-const REQUEST_STREAM_LIMIT = 30;
+const REQUEST_STREAM_LIMIT = 50;
 
 // 10 streams is good amount for data and tweeting reasons
-const STREAMS_TO_BE_JOINED = 10;
+const STREAMS_TO_BE_TRACKED = 10;
 
 // TODO Adjust the time to be in the channels
 // Time to be in the channels before switching
 // const LIVE_TIME = 1000*60*60;
-const LIVE_TIME = 1000*30; // Dummy value for testing
+const LIVE_TIME = 1000*60; // Dummy value for testing
 
 var FETCHED_STREAMERS = [];
 // STREAM_CONNECTIONS contains just the names and is used as options to
 // connect with '#' before the channel name which is added automatically
 // after the call to new tmi.client with options
+// will be used to connect to REQUEST_STREAM_LIMIT channels (prolly maximum value, 100)
 var STREAM_CONNECTIONS = [];
-// The actual stream objects
+
+// The actual stream objects, contains STREAMS_TO_BE_TRACKED channels
 var STREAMERS = [];
 
 // ============================================================================
@@ -40,15 +42,15 @@ function main() {
     var client = new tmi.client(options);
 
     registerListeners(client);
-    let streamerToJoinTweet = createJoiningInfoTweet();
-    twitter_handle.tweet(tweet);
+    let trackingStreamersTweet = createJoiningInfoTweet();
+    twitter_handle.tweet(trackingStreamersTweet);
     console.log("Preparing connection to:", STREAM_CONNECTIONS);
     console.log();
     console.log("===============================================================");
     client.connect();
 
     // Keep the connections until LIVE_TIME has passed and then reset everything
-    // Rejoin STREAMS_TO_BE_JOINED channels after specific time
+    // Rejoin STREAMS_TO_BE_TRACKED channels after specific time
     setTimeout(function (){
       for (streamer of STREAMERS) {
         // For example key 'Kappa' sort by values and get the keys to be able to access
@@ -86,9 +88,14 @@ function main() {
         console.log("After RESET: ", STREAM_CONNECTIONS);
         console.log("After RESET: ", STREAMERS);
 
-        // Use recursion back to the top
-        main();
-        }
+        // Just wait a few seconds to let all tweets get through
+        // before we tweet a new join tweet after the recursion call.
+        // probably is enough with 1-2 sec but theres no rush.
+        setTimeout(function() {
+          // Use recursion back to the top
+          main();
+        }, 10000);
+      }
       ).catch(function(err) {
         console.log("Caught error during disconnect:", err);
           //
@@ -158,10 +165,10 @@ function registerListeners(client) {
 async function randomlyPopulateSelectedStreamers() {
     console.log("Starting the picking process...");
     // Just grab all of the streamers names if we want more than we have
-    let requestedAmount = STREAMS_TO_BE_JOINED;
+    let requestedAmount = STREAMS_TO_BE_TRACKED;
     if (requestedAmount >= FETCHED_STREAMERS.length) {
       console.log("------DONT REQUEST MORE STREAMERS THAN WE HAVE!!!! Check the const field in app.js!");
-      equestedAmount = FETCHED_STREAMERS.length;
+      requestedAmount = FETCHED_STREAMERS.length;
     }
     //TODO MAYBE used the FETCHED_STREAMERS so we dont hold all the unsued data
     //TODO for unconnected streams until next random connection phase
@@ -174,9 +181,9 @@ async function randomlyPopulateSelectedStreamers() {
       console.log("Randomly picked streamer:" , streamerData.name);
       var updatedStreamer =  await addAdditionalAttributes(streamerData);
       // Add just the name to the array used to connect
-      STREAM_CONNECTIONS.push(updatedStreamer.name);
       STREAMERS.push(updatedStreamer);
       console.log("PUSHED STREAMER DATA", updatedStreamer.displayName);
+      console.log();
       requestedAmount--;
       }
 
@@ -196,6 +203,8 @@ function populateFetchedStreamers(body) {
     streamer.url = body.streams[i].channel.url;
     console.log("Fetching streamer data from:", streamer.name);
     FETCHED_STREAMERS.push(streamer);
+    // CONNECT TO ALL OF THEM
+    STREAM_CONNECTIONS.push("#" + streamer.name);
   }
   console.log();
 }
@@ -283,8 +292,8 @@ async function addAdditionalAttributes(streamer) {
     return streamer;
 }
 
-function broadcastMsg(message) {
-  for (streamerChannel of STREAM_CONNECTIONS) {
+function broadcastMsg(message, connectionArray) {
+  for (streamerChannel of connectionArray) {
     // client.action(streamerChannel, "Hello twitch chat!");
     console.log(message, streamerChannel);
   }
@@ -317,17 +326,27 @@ function createTweetText(streamer, emoteKeys) {
 }
 
 function createJoiningInfoTweet() {
-  let tweetMsg = "Now joining the following Twitch channels: " + STREAM_CONNECTIONS.join(', ') + " see you there!";
-  // Should not happen if dont go over 10 STREAM_CONNECTIONS
+
+    // Local helper function
+    let createMsg = function(streamsArray) {
+      let msg = "";
+      for (streamer of streamsArray) {
+        msg += "#" + streamer.name + " ";
+      }
+      return "Now joining the following Twitch channels: " + msg + " see you there!";
+    }
+
+  let tweetMsg = createMsg(STREAMERS);
+  // Should not happen if dont go over 10 STREAMERS
   if (tweetMsg.length > 280) {
     console.log("The joining tweet was too long, starting to cut the string.");
-    let connectionsCopy = STREAM_CONNECTIONS.slice();
+    let streamersCopy = STREAMERS.slice();
     // Still want to join all the channels just dont tweet out them all
     while (tweetMsg.length > 280) {
       console.log("REMOVED 1 element from the joining tweet.");
-      connectionsCopy.pop();
+      streamersCopy.pop();
       // Overwrite the msg with the new array
-      tweetMsg = "Now joining the following Twitch channels: " + connectionsCopy.join(', ') + " see you there!";
+      tweetMsg = createMsg(streamersCopy);
     }
   }
   return tweet = {
