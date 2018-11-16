@@ -1,15 +1,18 @@
-var tmi = require("tmi.js");
-var consts =  require("./consts");
-const request = require('request');
-const fs = require('fs');
+const tmi            = require("tmi.js");
+const consts         = require("./consts");
+const twitter_handle = require("./tweet_handler.js");
+const request      = require('request');
+const fs           = require('fs');
 
 const SUPPORTED_EMOTES = ["Kappa", "TriHard", "PogChamp", "4Head",
  "cmonBruh", "LUL", "EZ", "FailFish", "MingLee", "BibleThump", "Jebaited",
   "DansGame", "KappaPride", "WutFace", "BabyRage", "SeemsGood", "MrDestructoid", "PixelBob"];
 
+// TODO Adjust the number of streams to connect and selelect.
+const REQUEST_STREAM_LIMIT = 2;
+const STREAMS_TO_BE_JOINED = 1;
 
-const REQUEST_STREAM_LIMIT = 5;
-const STREAMS_TO_BE_JOINED = 3;
+// TODO Adjust the time to be in the channels
 // Time to be in the channels before switching
 // const LIVE_TIME = 1000*60*60;
 const LIVE_TIME = 1000*10; // Dummy value for testing
@@ -36,6 +39,12 @@ function main() {
 
     registerListeners(client);
 
+    console.log("STREAMERS: ", STREAMERS);
+    var tweet = {
+      status : "JOINING " + STREAMERS[0].displayName
+    }
+    twitter_handle.tweetImage(STREAMERS[0].logo, "Joining" + STREAMERS[0].displayName);
+    // twitter_handle.tweet(tweet);
     console.log("Preparing connection to:", STREAM_CONNECTIONS);
     console.log();
     console.log("===============================================================");
@@ -134,7 +143,7 @@ function registerListeners(client) {
 }
 // Helper founctions
 
-function randomlyPopulateSelectedStreamers() {
+async function randomlyPopulateSelectedStreamers() {
     console.log("Starting the picking process...");
     // Just grab all of the streamers names if we want more than we have
     let requestedAmount = STREAMS_TO_BE_JOINED;
@@ -151,15 +160,15 @@ function randomlyPopulateSelectedStreamers() {
         // from the original array
         var streamerData = fetchedCopy.splice(randomIndex, 1)[0];
         console.log("Randomly picked streamer:" , streamerData.name);
-        addAdditionalAttributes(streamerData);
-
+        var updatedStreamer =  await addAdditionalAttributes(streamerData);
         // Add just the name to the array used to connect
-        STREAM_CONNECTIONS.push(streamerData.name);
-        STREAMERS.push(streamerData);
+        STREAM_CONNECTIONS.push(updatedStreamer.name);
+        STREAMERS.push(updatedStreamer);
+        console.log("PUSHED STREAMER DATA", updatedStreamer.displayName);
         requestedAmount--;
+        }
       }
       console.log();
-  }
 }
 
 function populateFetchedStreamers(body) {
@@ -210,7 +219,7 @@ async function populateStreamerArrays() {
   try {
       let result = await getStreamerData(REQUEST_STREAM_LIMIT);
       populateFetchedStreamers(result);
-      randomlyPopulateSelectedStreamers();;
+      let res2 = await randomlyPopulateSelectedStreamers();
   } catch (error) {
       console.log("Error:", error);
   }
@@ -234,8 +243,14 @@ function createOptions() {
 }
 
 async function addAdditionalAttributes(streamer) {
-    console.log("Downloading logo for streamer :", streamer.name);
-    var imageLogo = await downloadFile(streamer.logoUrl);
+    try {
+      console.log("Downloading logo for streamer :", streamer.name);
+      var imageLogo = await downloadFile(streamer.logoUrl);
+      streamer.logo = imageLogo;
+    } catch (error) {
+        console.log("Error:", error);
+    }
+    console.log("Downloading logo AFTER:", streamer.name);
     let emotes = {
         "Kappa": 0
       , "TriHard": 0
@@ -256,7 +271,6 @@ async function addAdditionalAttributes(streamer) {
       , "MrDestructoid": 0
       , "PixelBob": 0
     }
-    streamer.logo = imageLogo;
     streamer.emotes = emotes;
     // streamer.kappaCount = 0;
     // streamer.trihardCount = 0;
@@ -275,6 +289,7 @@ async function addAdditionalAttributes(streamer) {
     // streamer.seemsGoodCount = 0;
     // streamer.mrdestructroid = 0;
     // streamer.pixelBobCount = 0;
+    return streamer;
 }
 
 function broadcastMsg(message) {
