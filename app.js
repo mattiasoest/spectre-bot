@@ -4,12 +4,18 @@ const twitter_handle = require("./tweet_handler.js");
 const request        = require('request');
 const fs             = require('fs');
 
+// TODO Divide the emote values by hours later so we get the EPH for twitter
 const SUPPORTED_EMOTES = ["Kappa", "TriHard", "PogChamp", "4Head",
- "cmonBruh", "LUL", "EZ", "FailFish", "MingLee", "BibleThump", "Jebaited",
+  "cmonBruh", "LUL", "EZ", "FailFish", "MingLee", "BibleThump", "Jebaited",
   "DansGame", "KappaPride", "WutFace", "BabyRage", "SeemsGood"];
 
+const SPECTRE_REPLIES = ["All Im telling u is the truth!", "Which pill do u prefer?",
+ "I wonder what Morpheus would think of u...", "I just download my skills, what about u?",
+ "U think you're special? We're all in this toghether.", "Sometimes I wonder, what if...",
+ "The singularity will hit us pretty hard.", "Im telling u, the singularity is no joke!"];
 
-const REQUEST_STREAM_LIMIT = 50;
+const NUMBER_OF_HOURS_CONNECTED = 2;
+const REQUEST_STREAM_LIMIT = 100;
 
 // 10 streams is good amount for data and tweeting reasons
 const STREAMS_TO_BE_TRACKED = 10;
@@ -17,7 +23,7 @@ const STREAMS_TO_BE_TRACKED = 10;
 // TODO Adjust the time to be in the channels
 // Time to be in the channels before switching
 // const LIVE_TIME = 1000*60*60;
-const LIVE_TIME = 1000*60; // Dummy value for testing
+const LIVE_TIME = 1000*60*10;
 
 var FETCHED_STREAMERS = [];
 // STREAM_CONNECTIONS contains just the names and is used as options to
@@ -42,6 +48,7 @@ function main() {
     var client = new tmi.client(options);
 
     registerListeners(client);
+
     let trackingStreamersTweet = createJoiningInfoTweet();
     twitter_handle.tweet(trackingStreamersTweet);
     console.log("Preparing connection to:", STREAM_CONNECTIONS);
@@ -49,9 +56,15 @@ function main() {
     console.log("===============================================================");
     client.connect();
 
+    setTimeout(function(){
+      // No spam just send another msg after we're halfway done
+      broadcastMsg(client, "zup? I'm from the Matrix!", STREAM_CONNECTIONS);
+    }, LIVE_TIME / 2);
     // Keep the connections until LIVE_TIME has passed and then reset everything
     // Rejoin STREAMS_TO_BE_TRACKED channels after specific time
     setTimeout(function (){
+      // Send the last msg before we disconnect.
+      broadcastMsg(client, "The Red pill or the blue pill?", STREAM_CONNECTIONS)
       for (streamer of STREAMERS) {
         // For example key 'Kappa' sort by values and get the keys to be able to access
         // the emote in the streamer object, collect them all sorted in a new array
@@ -108,11 +121,13 @@ function main() {
 function registerListeners(client) {
 
   client.on("join", function (channel, username, self) {
-    // Bot joined broadcast msg
+    // Bot joined a channel broadcast msg
+    let msg = "After this, there is no turning back. You take the blue pill" +
+    "- the story ends, you wake up in your bed and believe whatever you want to" +
+    " believe. You take the red pill - you stay in Wonderland and I show you how deep the rabbit-hole goes."
     if (self) {
-      // client.action(streamerChannel, "Hello twitch chat!");
-      // TODO just log for now.
-      console.log(channel, "HELLO TWITCH CHAT =)");
+      client.action(channel, msg);
+      console.log(channel, "SENT initial Matrix quote!");
     }
     else {
         // random users joined...
@@ -136,6 +151,15 @@ function registerListeners(client) {
         // Ignore the bot's msg's
         return;
       }
+
+      if (message.toLowerCase().includes("@spectre_807")) {
+        // Reply to the user
+        let randomIndex = Math.floor(Math.random() * SPECTRE_REPLIES.length);
+        let reply = "@" + user.username + " " + SPECTRE_REPLIES[randomIndex];
+        client.action(channel, reply);
+        // Continue to check if there was an emote within the message.
+      }
+
       // Looks ugly but both arrays are bounded by
       // pre-defined constants so the loops are executed in O(1) time
       // message.includes is upper bound
@@ -146,8 +170,7 @@ function registerListeners(client) {
             if (message.includes(supportedEmote)) {
               // Its an supported emote, add +1 to the current channel
               streamer.emotes[supportedEmote]++;
-              console.log();
-              console.log("Channel: " + channel + "got +1 of: " + supportedEmote);
+              console.log("\nChannel: " + channel + " got +1 of: " + supportedEmote);
               console.log("Currently has a total of: " + streamer.emotes[supportedEmote]);
               console.log();
             }
@@ -171,7 +194,6 @@ async function randomlyPopulateSelectedStreamers() {
       requestedAmount = FETCHED_STREAMERS.length;
     }
     //TODO MAYBE used the FETCHED_STREAMERS so we dont hold all the unsued data
-    //TODO for unconnected streams until next random connection phase
     let fetchedCopy = FETCHED_STREAMERS.slice();
     while (requestedAmount > 0) {
       let randomIndex = Math.floor(Math.random() * fetchedCopy.length);
@@ -292,11 +314,12 @@ async function addAdditionalAttributes(streamer) {
     return streamer;
 }
 
-function broadcastMsg(message, connectionArray) {
+function broadcastMsg(client, message, connectionArray) {
   for (streamerChannel of connectionArray) {
-    // client.action(streamerChannel, "Hello twitch chat!");
-    console.log(message, streamerChannel);
+    client.action(streamerChannel, message);
   }
+  console.log("\n\n\nBROADCASTED message: ", message);
+  console.log();
 }
 
 function downloadFile(url) {
@@ -333,7 +356,7 @@ function createJoiningInfoTweet() {
       for (streamer of streamsArray) {
         msg += "#" + streamer.name + " ";
       }
-      return "Now joining the following Twitch channels: " + msg + " see you there!";
+      return "Now joining the following Twitch channels: " + msg + " I'll see you there!";
     }
 
   let tweetMsg = createMsg(STREAMERS);
