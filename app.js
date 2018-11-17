@@ -14,22 +14,24 @@ const SPECTRE_REPLIES = ["All Im telling u is the truth!", "Which pill do u pref
  "U think you're special? We're all in this toghether.", "Sometimes I wonder, what if...",
  "The singularity will hit us pretty hard.", "Im telling u, the singularity is no joke!"];
 
-const NUMBER_OF_HOURS_CONNECTED = 2;
+const NUMBER_OF_HOURS_COLLECTING = 1;
 const REQUEST_STREAM_LIMIT = 100;
-const DO_STREAM_REQUEST_TIMES = 2;
-const SMALL_STREAMER_START_OFFSET = 1800;
+const DO_STREAM_REQUEST_TIMES = 25;
+const SMALL_STREAMER_START_OFFSET = 2800;
+const INITIAL_REQUEST_OFFSET = 0;
 // 10 streams is good amount for data and tweeting reasons
-const STREAMS_TO_BE_TRACKED = 2;
+const STREAMS_TO_BE_TRACKED = 10;
 
 // TODO Adjust the time to be in the channels
 // Time to be in the channels before switching
 // const LIVE_TIME = 1000*60*60;
-const EMOTE_COLLETION_LIVE_TIME = 1000*60*5;
+const EMOTE_COLLETION_LIVE_TIME = 1000*60*60 * NUMBER_OF_HOURS_COLLECTING;
 
 // Just for exposre to get ppl interested, lurking in streams with 10-20 viewers
 // Like whos this guys and then clicks on the nickname, sees profile sees
 // const LURKING_LIVE_TIME = 1000*60*120;
-const LURKING_LIVE_TIME = 1000*60*4;
+// TODO increas this to maybe * 2
+const LURKING_LIVE_TIME = 1000*60*60 * NUMBER_OF_HOURS_COLLECTING * 1;
 
 var STREAMERS_JOINED = 0;
 var FIRST_FETCHED_STREAMERS = [];
@@ -52,9 +54,12 @@ main();
 function main() {
   populateStreamerArrays().then(function () {
 
-    let currentViewersTweet = createCurrentViewersTweet();
-    twitter_handle.tweet(currentViewersTweet);
-    console.log("\n\n" + currentViewersTweet +"\n");
+    // If the offset is 0 then we requesting the top channels
+    if (INITIAL_REQUEST_OFFSET === 0) {
+      let currentViewersTweet = createCurrentViewersTweet();
+      twitter_handle.tweet(currentViewersTweet);
+      console.log("\n\n" + currentViewersTweet +"\n");
+    }
 
     var options = createOptions();
     var client = new tmi.client(options);
@@ -62,8 +67,7 @@ function main() {
     registerListeners(client);
 
     let trackingStreamersTweet = createJoiningInfoTweet();
-    // TODO
-    // twitter_handle.tweet(trackingStreamersTweet);
+    twitter_handle.tweet(trackingStreamersTweet);
     console.log("Preparing connection to:", STREAM_CONNECTIONS);
     console.log();
     console.log();
@@ -74,19 +78,27 @@ function main() {
     client.connect();
 
     setTimeout(function(){
+      // The client.getChannels() contains the currently connected getChannel
+      // We have to use this instead of STREAM_CONNECTIONS because may be joining
+      // alot of channels (over 1k) and it take around 30-35 mins to join them all
       // No spam just send another msg after we're halfway done
-      broadcastMsg(client, "zup? I'm from the Matrix!", STREAM_CONNECTIONS);
+
+      // TODO CANT BROADCAST CUZ WE PROLLY OVERFLOW THE CLIENT WITH RESPONSES
+      // CUZ WE DONT FOLLOW/SUBBING TO THE CHANNELS TO WE
+      // GOT DCED TWICE NOW
     }, EMOTE_COLLETION_LIVE_TIME / 2);
     // Keep the connections until LIVE_TIME has passed and then reset everything
     // Rejoin STREAMS_TO_BE_TRACKED channels after specific time
     setTimeout(function (){
       // Send the last msg before we disconnect.
-      broadcastMsg(client, "The Red pill or the blue pill?", STREAM_CONNECTIONS)
+      // TODO CANT BROADCAST CUZ WE PROLLY OVERFLOW THE CLIENT WITH RESPONSES
+      // CUZ WE DONT FOLLOW/SUBBING TO THE CHANNELS TO WE
+      // GOT DCED TWICE NOW
       for (streamer of STREAMERS) {
         // For example key 'Kappa' sort by values and get the keys to be able to access
         // the emote in the streamer object, collect them all sorted in a new array
         let emoteKeysSorted = Object.keys(streamer.emotes).sort(function(a,b){return streamer.emotes[b]-streamer.emotes[a]});
-        let tweetText = createTweetText(streamer, emoteKeysSorted);
+        let tweetText = createEphTweetText(streamer, emoteKeysSorted);
         // Very RARE case all emotes needs to hit 4-digit numbers
         // amd we have to delete one element
         while (tweetText.length > 280) {
@@ -95,10 +107,9 @@ function main() {
            // until we're in a tweet friendly range of characters
            // Delete from the back to get rid of less used emotes first
           emoteKeysSorted.pop();
-          tweetText = createTweetText(streamer, emoteKeysSorted);
+          tweetText = createEphTweetText(streamer, emoteKeysSorted);
         }
-        //TODO
-        // twitter_handle.tweetImage(streamer.logo, tweetText);
+        twitter_handle.tweetImage(streamer.logo, tweetText);
         console.log("===============================================================");
         console.log(streamer.displayName);
         console.log("Collected: ");
@@ -139,7 +150,11 @@ function main() {
       }, LURKING_LIVE_TIME);
 
       console.log("\n\n\n\nCollection done! No more tracking of emotes!\n\n\n\n");
-
+      // Send the last msg before we disconnect.
+      // TODO CANT BROADCAST CUZ WE PROLLY OVERFLOW THE CLIENT WITH RESPONSES
+      // CUZ WE DONT FOLLOW/SUBBING TO THE CHANNELS TO WE
+      // GOT DCED TWICE NOW
+      // broadcastMsg(client, "=)", client.getChannels());
 
     }, EMOTE_COLLETION_LIVE_TIME);
   });
@@ -155,7 +170,7 @@ function registerListeners(client) {
     " believe. You take the red pill - you stay in Wonderland and I show you how deep the rabbit-hole goes."
     if (self) {
       STREAMERS_JOINED++;
-      // client.action(channel, msg);
+      client.action(channel, msg);
       console.log(channel, "\nSENT initial Matrix quote.");
       console.log(channel, "\nNow joined " + STREAMERS_JOINED + " streamers!\n");
     }
@@ -295,16 +310,13 @@ async function populateStreamerArrays() {
   try {
 
       // Get use offset 0 to get the TOP channels
-      let result = await getStreamerData(REQUEST_STREAM_LIMIT, 0);
+      let result = await getStreamerData(REQUEST_STREAM_LIMIT, INITIAL_REQUEST_OFFSET);
       // let result = await getStreamerData(REQUEST_STREAM_LIMIT, 0);
       populateConnectionsArray(result, true);
       // let res2 = await randomlyPopulateSelectedStreamers();
       randomlyPopulateSelectedStreamers();
 
       console.log("GETTING SMALLER STREAMERS!!!");
-      // Dont need fetched streamers now.
-      // TODO USE FIRST_FETCHED_STREAMERS for viewers count and tweet top 25, 50, 100
-
       // 100 streams took 3-5 mins
       // 1000 streams took 34 mins.
       // Mix offsett a little
@@ -373,15 +385,16 @@ async function addAdditionalAttributes(streamer) {
 }
 
 // BE CAREFUL WITH THIS IF WE JOIN ALOT OF channels
-// for exmaple 100 streams take 3-5 mins to connect
-// dont use until you're pretty sure we joined the channels
-// Or just sent msgs to the first half of the array.
+// use client.getChannels() or target the beginning
+// of the STREAM_CONNECTIONS, for example top 100
+// ===== For exmaple 100 streams take 3-5 mins to connect
+// 1000 took 34 mins during testing
+// dont use STREAM_CONNECTIONS until you're sure u joined.
 function broadcastMsg(client, message, connectionArray) {
   for (streamerChannel of connectionArray) {
-    // client.action(streamerChannel, message);
+    client.action(streamerChannel, message);
   }
-  // console.log("\n\n\nBROADCASTED message: ", message);
-  console.log("\n\n\ LOGGED message: ", message);
+  console.log("\n\n\nBROADCASTED message: ", message);
   console.log();
 }
 
@@ -402,11 +415,11 @@ function downloadFile(url) {
       });
 }
 
-function createTweetText(streamer, emoteKeys) {
+function createEphTweetText(streamer, emoteKeys) {
   let tweetText = "Avg. EPH  in " + streamer.displayName + " @ " + streamer.url + "\n";
-  // let tweetText = streamer.name + "\n";
   for (emote of emoteKeys) {
-    tweetText += "#" + emote + " " + streamer.emotes[emote] + " ";
+    let avgEmotes = Math.round(streamer.emotes[emote] / NUMBER_OF_HOURS_COLLECTING);
+    tweetText += "#" + emote + " " + avgEmotes + " ";
   }
   return tweetText
 }
