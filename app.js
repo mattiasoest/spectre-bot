@@ -15,7 +15,7 @@ const SPECTRE_REPLIES = ["All Im telling u is the truth!", "Which pill do u pref
  "The singularity will hit us pretty hard.", "Im telling u, the singularity is no joke!"];
 
 const NUMBER_OF_HOURS_CONNECTED = 2;
-const REQUEST_STREAM_LIMIT = 30;
+const REQUEST_STREAM_LIMIT = 100;
 const DO_STREAM_REQUEST_TIMES = 2;
 const SMALL_STREAMER_START_OFFSET = 1800;
 // 10 streams is good amount for data and tweeting reasons
@@ -32,7 +32,7 @@ const EMOTE_COLLETION_LIVE_TIME = 1000*60*5;
 const LURKING_LIVE_TIME = 1000*60*4;
 
 var STREAMERS_JOINED = 0;
-var FETCHED_STREAMERS = [];
+var FIRST_FETCHED_STREAMERS = [];
 // STREAM_CONNECTIONS contains just the names and is used as options to
 // connect with '#' before the channel name which is added automatically
 // after the call to new tmi.client with options
@@ -42,11 +42,6 @@ var STREAM_CONNECTIONS = [];
 // The actual stream objects, contains STREAMS_TO_BE_TRACKED channels
 var STREAMERS = [];
 
-var currentViewers = {
-  top_25 : 0,
-  top_50 : 0,
-  top_100 : 0
-};
 // ============================================================================
 // Start the app
 main();
@@ -56,6 +51,11 @@ main();
 // Implementation
 function main() {
   populateStreamerArrays().then(function () {
+
+    let currentViewersTweet = createCurrentViewersTweet();
+    twitter_handle.tweet(currentViewersTweet);
+    console.log("\n\n" + currentViewersTweet +"\n");
+
     var options = createOptions();
     var client = new tmi.client(options);
 
@@ -68,10 +68,7 @@ function main() {
     console.log();
     console.log();
     console.log("===============================================================");
-    console.log("\nAMOUNT OF STREAMERS", STREAM_CONNECTIONS.length);
-    console.log();
-    console.log();
-    console.log();
+    console.log("\nAMOUNT OF STREAMERS IN THE ARRAY: ", STREAM_CONNECTIONS.length);
     console.log();
     console.log();
     client.connect();
@@ -121,7 +118,7 @@ function main() {
         // After successfull disconnect go back to top of main()
         client.disconnect().then(function () {
           // Reset all streamer data arrays
-          FETCHED_STREAMERS = [];
+          FIRST_FETCHED_STREAMERS = [];
           STREAM_CONNECTIONS = [];
           STREAMERS = [];
           STREAMERS_JOINED = 0;
@@ -222,14 +219,14 @@ async function randomlyPopulateSelectedStreamers() {
     console.log("Starting the picking process...");
     // Just grab all of the streamers names if we want more than we have
     let requestedAmount = STREAMS_TO_BE_TRACKED;
-    if (requestedAmount >= FETCHED_STREAMERS.length) {
+    if (requestedAmount >= FIRST_FETCHED_STREAMERS.length) {
       console.log("------DONT REQUEST MORE STREAMERS THAN WE HAVE!!!! Check the const field in app.js!");
-      requestedAmount = FETCHED_STREAMERS.length;
+      requestedAmount = FIRST_FETCHED_STREAMERS.length;
     }
 
     // Now since we're always using all 100 streams to connect
     // cut the FETCHED_STREAMERS in a ~1/3 to get the ones with viewers
-    let fetchedCopy = FETCHED_STREAMERS.slice(0, REQUEST_STREAM_LIMIT / 3);
+    let fetchedCopy = FIRST_FETCHED_STREAMERS.slice(0, REQUEST_STREAM_LIMIT / 3);
     while (requestedAmount > 0) {
       let randomIndex = Math.floor(Math.random() * fetchedCopy.length);
       // Pick random streamer and delete him at the same time
@@ -261,7 +258,7 @@ function populateConnectionsArray(body, fetchedStreamersAlso) {
       streamer.url = body.streams[i].channel.url;
       streamer.viewers = body.streams[i].viewers;
       console.log("Fetching streamer data from:", streamer.name);
-      FETCHED_STREAMERS.push(streamer);
+      FIRST_FETCHED_STREAMERS.push(streamer);
     }
     // CONNECT TO ALL OF THEM
     STREAM_CONNECTIONS.push("#" + streamer.name);
@@ -296,8 +293,9 @@ function getStreamerData(limit, offset) {
 
 async function populateStreamerArrays() {
   try {
-      //TODO GET ALL SMALL STREAMERS NOW USING OFFSET for example get 100!!
-      let result = await getStreamerData(REQUEST_STREAM_LIMIT, 2100);
+
+      // Get use offset 0 to get the TOP channels
+      let result = await getStreamerData(REQUEST_STREAM_LIMIT, 0);
       // let result = await getStreamerData(REQUEST_STREAM_LIMIT, 0);
       populateConnectionsArray(result, true);
       // let res2 = await randomlyPopulateSelectedStreamers();
@@ -305,7 +303,7 @@ async function populateStreamerArrays() {
 
       console.log("GETTING SMALLER STREAMERS!!!");
       // Dont need fetched streamers now.
-      // TODO USE FETCHED_STREAMERS for viewers count and tweet top 25, 50, 100
+      // TODO USE FIRST_FETCHED_STREAMERS for viewers count and tweet top 25, 50, 100
 
       // 100 streams took 3-5 mins
       // 1000 streams took 34 mins.
@@ -440,4 +438,30 @@ function createJoiningInfoTweet() {
   return tweet = {
     status : tweetMsg
   }
+}
+
+function createCurrentViewersTweet() {
+  let top_25 = 0;
+  let top_50 = 0;
+  let top_100 = 0;
+
+  let counter = 1;
+  for (streamer of FIRST_FETCHED_STREAMERS) {
+    counter++;
+    top_100 += streamer.viewers;
+    if (counter === 25) {
+      top_25 = top_100;
+      continue;
+    }
+    if (counter === 50) {
+      top_50 = top_100;
+      continue;
+    }
+  }
+  return tweet = { status : "Viewers currently @ https://www.twitch.tv/ \n" +
+  "#top100 channels has a total of: " + top_100 + " viewers\n" +
+  "where the #top50 channels has a total of: " + top_50 + " viewers\n" +
+  "and the #top25 channels has a total of: " + top_25 + " viewers.\n" +
+  "Joining a few random channels shortly..."};
+
 }
