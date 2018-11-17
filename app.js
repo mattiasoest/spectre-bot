@@ -1,6 +1,5 @@
 const tmi            = require("tmi.js");
-// const consts         = require("./consts");
-const consts         = require("./live_config");
+const config         = require("./live_config");
 const twitter_handle = require("./tweet_handler.js");
 const request        = require('request');
 const fs             = require('fs');
@@ -290,7 +289,7 @@ function getStreamerData(limit, offset) {
     url: 'https://api.twitch.tv/kraken/streams?limit=' + limit + '&language=en&offset=' + offset,
     json: true,
     headers: {
-        'Client-ID': consts.clientId
+        'Client-ID': config.clientId
       }
   };
 
@@ -347,8 +346,8 @@ function createOptions() {
       reconnect : true
     },
     identity : {
-      username : consts.userName,
-      password : consts.twitchPass
+      username : config.userName,
+      password : config.twitchPass
     },
     channels : STREAM_CONNECTIONS
   };
