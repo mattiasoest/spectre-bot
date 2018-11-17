@@ -15,16 +15,23 @@ const SPECTRE_REPLIES = ["All Im telling u is the truth!", "Which pill do u pref
  "The singularity will hit us pretty hard.", "Im telling u, the singularity is no joke!"];
 
 const NUMBER_OF_HOURS_CONNECTED = 2;
-const REQUEST_STREAM_LIMIT = 100;
-
+const REQUEST_STREAM_LIMIT = 30;
+const DO_STREAM_REQUEST_TIMES = 2;
+const SMALL_STREAMER_START_OFFSET = 1800;
 // 10 streams is good amount for data and tweeting reasons
-const STREAMS_TO_BE_TRACKED = 10;
+const STREAMS_TO_BE_TRACKED = 2;
 
 // TODO Adjust the time to be in the channels
 // Time to be in the channels before switching
 // const LIVE_TIME = 1000*60*60;
-const LIVE_TIME = 1000*60*10;
+const EMOTE_COLLETION_LIVE_TIME = 1000*60*5;
 
+// Just for exposre to get ppl interested, lurking in streams with 10-20 viewers
+// Like whos this guys and then clicks on the nickname, sees profile sees
+// const LURKING_LIVE_TIME = 1000*60*120;
+const LURKING_LIVE_TIME = 1000*60*4;
+
+var STREAMERS_JOINED = 0;
 var FETCHED_STREAMERS = [];
 // STREAM_CONNECTIONS contains just the names and is used as options to
 // connect with '#' before the channel name which is added automatically
@@ -35,6 +42,11 @@ var STREAM_CONNECTIONS = [];
 // The actual stream objects, contains STREAMS_TO_BE_TRACKED channels
 var STREAMERS = [];
 
+var currentViewers = {
+  top_25 : 0,
+  top_50 : 0,
+  top_100 : 0
+};
 // ============================================================================
 // Start the app
 main();
@@ -50,16 +62,24 @@ function main() {
     registerListeners(client);
 
     let trackingStreamersTweet = createJoiningInfoTweet();
-    twitter_handle.tweet(trackingStreamersTweet);
+    // TODO
+    // twitter_handle.tweet(trackingStreamersTweet);
     console.log("Preparing connection to:", STREAM_CONNECTIONS);
     console.log();
+    console.log();
     console.log("===============================================================");
+    console.log("\nAMOUNT OF STREAMERS", STREAM_CONNECTIONS.length);
+    console.log();
+    console.log();
+    console.log();
+    console.log();
+    console.log();
     client.connect();
 
     setTimeout(function(){
       // No spam just send another msg after we're halfway done
       broadcastMsg(client, "zup? I'm from the Matrix!", STREAM_CONNECTIONS);
-    }, LIVE_TIME / 2);
+    }, EMOTE_COLLETION_LIVE_TIME / 2);
     // Keep the connections until LIVE_TIME has passed and then reset everything
     // Rejoin STREAMS_TO_BE_TRACKED channels after specific time
     setTimeout(function (){
@@ -80,8 +100,8 @@ function main() {
           emoteKeysSorted.pop();
           tweetText = createTweetText(streamer, emoteKeysSorted);
         }
-
-        twitter_handle.tweetImage(streamer.logo, tweetText);
+        //TODO
+        // twitter_handle.tweetImage(streamer.logo, tweetText);
         console.log("===============================================================");
         console.log(streamer.displayName);
         console.log("Collected: ");
@@ -89,45 +109,58 @@ function main() {
         console.log();
       }
 
-      console.log("\nDISCONNECTING... PREPARING NEW CONNECTIONS!\n");
-      // After successfull disconnect go back to top of main()
-      client.disconnect().then(function () {
-        // Reset all streamer data arrays
-        FETCHED_STREAMERS = [];
-        STREAM_CONNECTIONS = [];
-        STREAMERS = [];
+      // Stats has been tweeted, now chill in the streams for a bit
+      // Hang around streams and idle before connection to new streamers
+      // It take roughly 20-25 mins to connect to 500 streams so dont waste it.
+      // Last test 20 mins 630 streamers... KEEP TRACK OF THIS
+      // We dont want to spam twitter too much anyway.
+      // 2 more hours lurking
+      setTimeout(function() {
 
-        console.log("After RESET: ", FETCHED_STREAMERS);
-        console.log("After RESET: ", STREAM_CONNECTIONS);
-        console.log("After RESET: ", STREAMERS);
+        console.log("\nDISCONNECTING... PREPARING NEW CONNECTIONS!\n");
+        // After successfull disconnect go back to top of main()
+        client.disconnect().then(function () {
+          // Reset all streamer data arrays
+          FETCHED_STREAMERS = [];
+          STREAM_CONNECTIONS = [];
+          STREAMERS = [];
+          STREAMERS_JOINED = 0;
 
-        // Just wait a few seconds to let all tweets get through
-        // before we tweet a new join tweet after the recursion call.
-        // probably is enough with 1-2 sec but theres no rush.
-        setTimeout(function() {
-          // Use recursion back to the top
-          main();
-        }, 10000);
-      }
-      ).catch(function(err) {
-        console.log("Caught error during disconnect:", err);
-          //
-      });
-    }, LIVE_TIME);
+          console.log("\nALL DATA HAS BEEN RESET...\n");
+
+          // Just wait a few seconds if we want to tweet or something to let all tweets get through
+          // probably is enough with 1-2 sec but theres no rush.
+          setTimeout(function() {
+            // Use recursion back to the top
+            main();
+          }, 10000);
+        }
+        ).catch(function(err) {
+          console.log("Caught error during disconnect:", err);
+        });
+
+      }, LURKING_LIVE_TIME);
+
+      console.log("\n\n\n\nCollection done! No more tracking of emotes!\n\n\n\n");
+
+
+    }, EMOTE_COLLETION_LIVE_TIME);
   });
 }
 
 // ============================================================================
 function registerListeners(client) {
-
+  // It take about 4-5 minutes to join 100 channels
   client.on("join", function (channel, username, self) {
     // Bot joined a channel broadcast msg
     let msg = "After this, there is no turning back. You take the blue pill" +
     "- the story ends, you wake up in your bed and believe whatever you want to" +
     " believe. You take the red pill - you stay in Wonderland and I show you how deep the rabbit-hole goes."
     if (self) {
-      client.action(channel, msg);
-      console.log(channel, "SENT initial Matrix quote!");
+      STREAMERS_JOINED++;
+      // client.action(channel, msg);
+      console.log(channel, "\nSENT initial Matrix quote.");
+      console.log(channel, "\nNow joined " + STREAMERS_JOINED + " streamers!\n");
     }
     else {
         // random users joined...
@@ -144,7 +177,7 @@ function registerListeners(client) {
 
   client.on('disconnected', function(reason){
     console.log("Disconnected:", reason)
-  })
+  });
 
   client.on("chat", function(channel, user, message, self) {
       if (self) {
@@ -193,8 +226,10 @@ async function randomlyPopulateSelectedStreamers() {
       console.log("------DONT REQUEST MORE STREAMERS THAN WE HAVE!!!! Check the const field in app.js!");
       requestedAmount = FETCHED_STREAMERS.length;
     }
-    //TODO MAYBE used the FETCHED_STREAMERS so we dont hold all the unsued data
-    let fetchedCopy = FETCHED_STREAMERS.slice();
+
+    // Now since we're always using all 100 streams to connect
+    // cut the FETCHED_STREAMERS in a ~1/3 to get the ones with viewers
+    let fetchedCopy = FETCHED_STREAMERS.slice(0, REQUEST_STREAM_LIMIT / 3);
     while (requestedAmount > 0) {
       let randomIndex = Math.floor(Math.random() * fetchedCopy.length);
       // Pick random streamer and delete him at the same time
@@ -212,28 +247,31 @@ async function randomlyPopulateSelectedStreamers() {
       console.log();
 }
 
-function populateFetchedStreamers(body) {
+function populateConnectionsArray(body, fetchedStreamersAlso) {
   // console.log('body---->>', body);
   console.log('Number of streamers fetched:', body.streams.length);
   console.log("===============================================================");
 
   for (var i = 0; i < body.streams.length; i++) {
-    let streamer = {};
-    streamer.displayName = body.streams[i].channel.display_name;
+    var streamer = {};
     streamer.name = body.streams[i].channel.name;
-    streamer.logoUrl = body.streams[i].channel.logo;
-    streamer.url = body.streams[i].channel.url;
-    console.log("Fetching streamer data from:", streamer.name);
-    FETCHED_STREAMERS.push(streamer);
+    if (fetchedStreamersAlso) {
+      streamer.displayName = body.streams[i].channel.display_name;
+      streamer.logoUrl = body.streams[i].channel.logo;
+      streamer.url = body.streams[i].channel.url;
+      streamer.viewers = body.streams[i].viewers;
+      console.log("Fetching streamer data from:", streamer.name);
+      FETCHED_STREAMERS.push(streamer);
+    }
     // CONNECT TO ALL OF THEM
     STREAM_CONNECTIONS.push("#" + streamer.name);
   }
   console.log();
 }
 
-function getStreamerData(limit) {
+function getStreamerData(limit, offset) {
   var options = {
-    url: 'https://api.twitch.tv/kraken/streams?limit=' + limit + '&language=en',
+    url: 'https://api.twitch.tv/kraken/streams?limit=' + limit + '&language=en&offset=' + offset,
     json: true,
     headers: {
         'Client-ID': consts.clientId
@@ -258,9 +296,31 @@ function getStreamerData(limit) {
 
 async function populateStreamerArrays() {
   try {
-      let result = await getStreamerData(REQUEST_STREAM_LIMIT);
-      populateFetchedStreamers(result);
-      let res2 = await randomlyPopulateSelectedStreamers();
+      //TODO GET ALL SMALL STREAMERS NOW USING OFFSET for example get 100!!
+      let result = await getStreamerData(REQUEST_STREAM_LIMIT, 2100);
+      // let result = await getStreamerData(REQUEST_STREAM_LIMIT, 0);
+      populateConnectionsArray(result, true);
+      // let res2 = await randomlyPopulateSelectedStreamers();
+      randomlyPopulateSelectedStreamers();
+
+      console.log("GETTING SMALLER STREAMERS!!!");
+      // Dont need fetched streamers now.
+      // TODO USE FETCHED_STREAMERS for viewers count and tweet top 25, 50, 100
+
+      // 100 streams took 3-5 mins
+      // 1000 streams took 34 mins.
+      // Mix offsett a little
+      // These small channels will proably go on and offline so get ALOT of them
+      // let startOffset = 2700;
+      let startOffset = SMALL_STREAMER_START_OFFSET;
+      // Start from 1 since we already made the main request for the
+      // larger streamers
+      for (let i = 1; i < DO_STREAM_REQUEST_TIMES; i++) {
+        let res = await getStreamerData(REQUEST_STREAM_LIMIT, startOffset);
+        populateConnectionsArray(res, false);
+        // Skip a few we will get dublicates anyway according to the api
+        startOffset += 130;
+      }
   } catch (error) {
       console.log("Error:", error);
   }
@@ -314,11 +374,16 @@ async function addAdditionalAttributes(streamer) {
     return streamer;
 }
 
+// BE CAREFUL WITH THIS IF WE JOIN ALOT OF channels
+// for exmaple 100 streams take 3-5 mins to connect
+// dont use until you're pretty sure we joined the channels
+// Or just sent msgs to the first half of the array.
 function broadcastMsg(client, message, connectionArray) {
   for (streamerChannel of connectionArray) {
-    client.action(streamerChannel, message);
+    // client.action(streamerChannel, message);
   }
-  console.log("\n\n\nBROADCASTED message: ", message);
+  // console.log("\n\n\nBROADCASTED message: ", message);
+  console.log("\n\n\ LOGGED message: ", message);
   console.log();
 }
 
