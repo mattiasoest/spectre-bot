@@ -14,11 +14,13 @@ const SPECTRE_REPLIES = ["All Im telling u is the truth!", "Which pill do u pref
  "U think you're special? We're all in this toghether.", "Sometimes I wonder, what if...",
  "The singularity will hit us pretty hard.", "Im telling u, the singularity is no joke!"];
 
-const NUMBER_OF_HOURS_COLLECTING = 2;
-const REQUEST_STREAM_LIMIT = 100;
-const DO_STREAM_REQUEST_TIMES = 4;
-const SMALL_STREAMER_START_OFFSET = 2000;
-const INITIAL_REQUEST_OFFSET = 0;
+// TODO
+const NUMBER_OF_HOURS_COLLECTING   = 2;
+const INITIAL_STREAM_LIMIT         = 26;
+const REQUEST_STREAM_LIMIT         = 100;
+const DO_STREAM_REQUEST_TIMES      = 60;
+const SMALL_STREAMER_START_OFFSET  = 1700;
+const INITIAL_REQUEST_OFFSET       = 0;
 // 10 streams is good amount for data and tweeting reasons
 const STREAMS_TO_BE_TRACKED = 10;
 // TODO Adjust the time to be in the channels
@@ -36,7 +38,6 @@ var FIRST_FETCHED_STREAMERS = [];
 // STREAM_CONNECTIONS contains just the names and is used as options to
 // connect with '#' before the channel name which is added automatically
 // after the call to new tmi.client with options
-// will be used to connect to REQUEST_STREAM_LIMIT channels (prolly maximum value, 100)
 var STREAM_CONNECTIONS = [];
 // The actual stream objects, contains STREAMS_TO_BE_TRACKED channels
 var STREAMERS = [];
@@ -55,7 +56,7 @@ function main() {
     if (INITIAL_REQUEST_OFFSET === 0) {
       let currentViewersTweet = createCurrentViewersTweet();
       twitter_handle.tweet(currentViewersTweet);
-      console.log("\n\n" + currentViewersTweet +"\n");
+      console.log("\n\n====TWEETED CURRENT VIEWERS STATS====\n\n");
     }
 
     var options = createOptions();
@@ -83,6 +84,7 @@ function main() {
       // TODO CANT BROADCAST CUZ WE PROLLY OVERFLOW THE CLIENT WITH RESPONSES
       // CUZ WE DONT FOLLOW/SUBBING TO THE CHANNELS TO WE
       // GOT DCED TWICE NOW
+      // broadcastMsg(client, "zup? Im from the matrix.", client.getChannels());
     }, EMOTE_COLLETION_LIVE_TIME / 2);
     // Keep the connections until LIVE_TIME has passed and then reset everything
     // Rejoin STREAMS_TO_BE_TRACKED channels after specific time
@@ -169,8 +171,8 @@ function registerListeners(client) {
     if (self) {
       STREAMERS_JOINED++;
       client.action(channel, msg);
-      console.log(channel, "\nSENT initial Matrix quote.");
-      console.log(channel, "\nNow joined " + STREAMERS_JOINED + " streamers!\n");
+      console.log(channel, "\nSENT initial Matrix quote.\n");
+      console.log(channel, "\n\n========Now joined " + STREAMERS_JOINED + " streamers!========\n\n");
     }
     else {
         // random users joined...
@@ -245,13 +247,16 @@ async function randomlyPopulateSelectedStreamers() {
     }
 
     // Now since we're always using all 100 streams to connect
-    // cut the FETCHED_STREAMERS in a ~1/3 to get the ones with viewers
-    let fetchedCopy = FIRST_FETCHED_STREAMERS.slice(0, REQUEST_STREAM_LIMIT / 3);
+    // get a copy of the FETCHED_STREAMERS first INITIAL_REQUEST_STREAM_LIMIT elements
+    let fetchedCopy = FIRST_FETCHED_STREAMERS.slice(0, INITIAL_STREAM_LIMIT);
     while (requestedAmount > 0) {
       let randomIndex = Math.floor(Math.random() * fetchedCopy.length);
       // Pick random streamer and delete him at the same time
       // from the original array
       var streamerData = fetchedCopy.splice(randomIndex, 1)[0];
+      // Only add the BIG streamers which we gonna track to the connection array
+      // So STREAMS_TO_BE_TRACKED big channels and if it works 4-6k small channels
+      STREAM_CONNECTIONS.push("#" + streamerData.name);
       console.log("Randomly picked streamer:" , streamerData.name);
       var updatedStreamer =  await addAdditionalAttributes(streamerData);
       // Add just the name to the array used to connect
@@ -264,11 +269,12 @@ async function randomlyPopulateSelectedStreamers() {
       console.log();
 }
 
-function populateConnectionsArray(body, fetchedStreamersAlso) {
+function parsedFetchedArray(body, fetchedStreamersAlso) {
   // console.log('body---->>', body);
   console.log('Number of streamers fetched:', body.streams.length);
   console.log("===============================================================");
 
+  let counter = 0;
   for (var i = 0; i < body.streams.length; i++) {
     var streamer = {};
     streamer.name = body.streams[i].channel.name;
@@ -280,8 +286,9 @@ function populateConnectionsArray(body, fetchedStreamersAlso) {
       console.log("Fetching streamer data from:", streamer.name);
       FIRST_FETCHED_STREAMERS.push(streamer);
     }
-    // CONNECT TO ALL OF THEM
-    STREAM_CONNECTIONS.push("#" + streamer.name);
+    else {
+        STREAM_CONNECTIONS.push("#" + streamer.name);
+    }
   }
   console.log();
 }
@@ -313,12 +320,10 @@ function getStreamerData(limit, offset) {
 
 async function populateStreamerArrays() {
   try {
-
-      // Get use offset 0 to get the TOP channels
+      //  Use offset 0 to get the INITIAL_REQUEST_STREAM_LIMIT TOP channels
       let result = await getStreamerData(REQUEST_STREAM_LIMIT, INITIAL_REQUEST_OFFSET);
-      // let result = await getStreamerData(REQUEST_STREAM_LIMIT, 0);
-      populateConnectionsArray(result, true);
-      // let res2 = await randomlyPopulateSelectedStreamers();
+      parsedFetchedArray(result, true);
+      // Called once, then get the rest of the small channels
       randomlyPopulateSelectedStreamers();
 
       console.log("GETTING SMALLER STREAMERS!!!");
@@ -326,13 +331,12 @@ async function populateStreamerArrays() {
       // 1000 streams took 34 mins.
       // Mix offsett a little
       // These small channels will proably go on and offline so get ALOT of them
-      // let startOffset = 2700;
       let startOffset = SMALL_STREAMER_START_OFFSET;
       // Start from 1 since we already made the main request for the
       // larger streamers
       for (let i = 1; i < DO_STREAM_REQUEST_TIMES; i++) {
         let res = await getStreamerData(REQUEST_STREAM_LIMIT, startOffset);
-        populateConnectionsArray(res, false);
+        parsedFetchedArray(res, false);
         // Skip a few we will get dublicates anyway according to the api
         startOffset += 100;
       }
