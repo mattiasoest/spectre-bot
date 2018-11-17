@@ -1,5 +1,6 @@
 const tmi            = require("tmi.js");
-const consts         = require("./consts");
+// const consts         = require("./consts");
+const consts         = require("./live_config");
 const twitter_handle = require("./tweet_handler.js");
 const request        = require('request');
 const fs             = require('fs');
