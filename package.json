@@ -1,12 +1,13 @@
 {
   "name": "twitch_bot",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "spectre_807 the bot that is lurking in the shadows",
+  "main": "app.js",
   "scripts": {
+    "start": "node app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "B1tCreator",
   "license": "ISC",
   "dependencies": {
     "request": "^2.88.0",
