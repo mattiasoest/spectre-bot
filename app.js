@@ -484,6 +484,6 @@ function createCurrentViewersTweet() {
   "#top100 channels has a total of: " + top_100 + " viewers\n" +
   "where the #top50 channels has a total of: " + top_50 + " viewers\n" +
   "and the #top25 channels has a total of: " + top_25 + " viewers.\n" +
-  "Joining a few random channels shortly..."};
+  "A good time to be lurking on the shadows..."};
 
 }
