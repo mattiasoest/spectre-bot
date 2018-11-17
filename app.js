@@ -14,10 +14,10 @@ const SPECTRE_REPLIES = ["All Im telling u is the truth!", "Which pill do u pref
  "U think you're special? We're all in this toghether.", "Sometimes I wonder, what if...",
  "The singularity will hit us pretty hard.", "Im telling u, the singularity is no joke!"];
 
-const NUMBER_OF_HOURS_COLLECTING = 1;
+const NUMBER_OF_HOURS_COLLECTING = 2;
 const REQUEST_STREAM_LIMIT = 100;
-const DO_STREAM_REQUEST_TIMES = 25;
-const SMALL_STREAMER_START_OFFSET = 2800;
+const DO_STREAM_REQUEST_TIMES = 4;
+const SMALL_STREAMER_START_OFFSET = 2000;
 const INITIAL_REQUEST_OFFSET = 0;
 // 10 streams is good amount for data and tweeting reasons
 const STREAMS_TO_BE_TRACKED = 10;
@@ -27,11 +27,11 @@ const STREAMS_TO_BE_TRACKED = 10;
 // const LIVE_TIME = 1000*60*60;
 const EMOTE_COLLETION_LIVE_TIME = 1000*60*60 * NUMBER_OF_HOURS_COLLECTING;
 
-// Just for exposre to get ppl interested, lurking in streams with 10-20 viewers
-// Like whos this guys and then clicks on the nickname, sees profile sees
+// Just for expore to get ppl interested, lurking in streams with 1-20 viewers
+// Like who is this guy? and then clicks on the nickname, sees profile sees, sees twitter
+// Guerilla marketing without spamming
 // const LURKING_LIVE_TIME = 1000*60*120;
-// TODO increas this to maybe * 2
-const LURKING_LIVE_TIME = 1000*60*60 * NUMBER_OF_HOURS_COLLECTING * 1;
+const LURKING_LIVE_TIME = 1000*60*60 * NUMBER_OF_HOURS_COLLECTING * 2.5;
 
 var STREAMERS_JOINED = 0;
 var FIRST_FETCHED_STREAMERS = [];
