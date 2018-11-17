@@ -4,7 +4,6 @@ const twitter_handle = require("./tweet_handler.js");
 const request        = require('request');
 const fs             = require('fs');
 
-// TODO Divide the emote values by hours later so we get the EPH for twitter
 const SUPPORTED_EMOTES = ["Kappa", "TriHard", "PogChamp", "4Head",
   "cmonBruh", "LUL", "EZ", "FailFish", "MingLee", "BibleThump", "Jebaited",
   "DansGame", "KappaPride", "WutFace", "BabyRage", "SeemsGood"];
@@ -14,7 +13,6 @@ const SPECTRE_REPLIES = ["All Im telling u is the truth!", "Which pill do u pref
  "U think you're special? We're all in this toghether.", "Sometimes I wonder, what if...",
  "The singularity will hit us pretty hard.", "Im telling u, the singularity is no joke!"];
 
-// TODO
 const NUMBER_OF_HOURS_COLLECTING   = 2;
 const INITIAL_STREAM_LIMIT         = 26;
 const REQUEST_STREAM_LIMIT         = 100;
@@ -22,31 +20,24 @@ const DO_STREAM_REQUEST_TIMES      = 60;
 const SMALL_STREAMER_START_OFFSET  = 1700;
 const INITIAL_REQUEST_OFFSET       = 0;
 // 10 streams is good amount for data and tweeting reasons
-const STREAMS_TO_BE_TRACKED = 10;
-// TODO Adjust the time to be in the channels
-// Time to be in the channels before switching
-// const LIVE_TIME = 1000*60*60;
-const EMOTE_COLLETION_LIVE_TIME = 1000*60*60 * NUMBER_OF_HOURS_COLLECTING;
+const STREAMS_TO_BE_TRACKED        = 10;
+const EMOTE_COLLETION_LIVE_TIME    = 1000*60*60 * NUMBER_OF_HOURS_COLLECTING;
 // Just for expore to get ppl interested, lurking in streams with 1-20 viewers
 // Like who is this guy? and then clicks on the nickname, sees profile sees, sees twitter
 // Guerilla marketing without spamming
 // const LURKING_LIVE_TIME = 1000*60*120;
-const LURKING_LIVE_TIME = 1000*60*60 * NUMBER_OF_HOURS_COLLECTING * 2.5;
+const LURKING_LIVE_TIME            = 1000*60*60 * NUMBER_OF_HOURS_COLLECTING * 2.5;
 // =============NOT CONSTANTS=============================================================
-var STREAMERS_JOINED = 0;
+var STREAMERS_JOINED        = 0;
 var FIRST_FETCHED_STREAMERS = [];
-// STREAM_CONNECTIONS contains just the names and is used as options to
-// connect with '#' before the channel name which is added automatically
-// after the call to new tmi.client with options
-var STREAM_CONNECTIONS = [];
+var STREAM_CONNECTIONS      = [];
 // The actual stream objects, contains STREAMS_TO_BE_TRACKED channels
-var STREAMERS = [];
-var STILL_COLLECTING = true;
+var STREAMERS               = [];
+var STILL_COLLECTING        = true;
 // ============================================================================
 // Start the app
 main();
 // ============================================================================
-
 
 // Implementation
 function main() {
