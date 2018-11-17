@@ -1,11 +1,11 @@
-var Twit   = require("twit");
-var consts =  require("./consts");
+const Twit  = require("twit");
+const config = require("./live_config");
 
 var T = new Twit({
-  consumer_key:         consts.twitter_consumer_key,
-  consumer_secret:      consts.twitter_consumer_secret,
-  access_token:         consts.twitter_access_token,
-  access_token_secret:  consts.twitter_access_secret,
+  consumer_key:         config.twitter_consumer_key,
+  consumer_secret:      config.twitter_consumer_secret,
+  access_token:         config.twitter_access_token,
+  access_token_secret:  config.twitter_access_secret,
   timeout_ms:           60*1000,  // optional HTTP request timeout to apply to all requests.
   strictSSL:            true,     // optional - requires SSL certificates to be valid.
 });
