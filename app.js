@@ -334,7 +334,7 @@ async function populateStreamerArrays() {
         let res = await getStreamerData(REQUEST_STREAM_LIMIT, startOffset);
         populateConnectionsArray(res, false);
         // Skip a few we will get dublicates anyway according to the api
-        startOffset += 130;
+        startOffset += 100;
       }
   } catch (error) {
       console.log("Error:", error);
