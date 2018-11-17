@@ -162,8 +162,8 @@ function registerListeners(client) {
     if (self) {
       STREAMERS_JOINED++;
       client.action(channel, msg);
-      console.log(channel, "\nSENT initial Matrix quote.\n");
-      console.log(channel, "\n\n========Now joined " + STREAMERS_JOINED + " streamers!========\n\n");
+      console.log("\n\nSent initial Matrix quote.");
+      console.log("\n========Now joined " + STREAMERS_JOINED + " streamers!========\n\n");
     }
     else {
         // random users joined...
