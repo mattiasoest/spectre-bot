@@ -21,18 +21,16 @@ const SMALL_STREAMER_START_OFFSET = 2000;
 const INITIAL_REQUEST_OFFSET = 0;
 // 10 streams is good amount for data and tweeting reasons
 const STREAMS_TO_BE_TRACKED = 10;
-
 // TODO Adjust the time to be in the channels
 // Time to be in the channels before switching
 // const LIVE_TIME = 1000*60*60;
 const EMOTE_COLLETION_LIVE_TIME = 1000*60*60 * NUMBER_OF_HOURS_COLLECTING;
-
 // Just for expore to get ppl interested, lurking in streams with 1-20 viewers
 // Like who is this guy? and then clicks on the nickname, sees profile sees, sees twitter
 // Guerilla marketing without spamming
 // const LURKING_LIVE_TIME = 1000*60*120;
 const LURKING_LIVE_TIME = 1000*60*60 * NUMBER_OF_HOURS_COLLECTING * 2.5;
-
+// =============NOT CONSTANTS=============================================================
 var STREAMERS_JOINED = 0;
 var FIRST_FETCHED_STREAMERS = [];
 // STREAM_CONNECTIONS contains just the names and is used as options to
@@ -40,10 +38,9 @@ var FIRST_FETCHED_STREAMERS = [];
 // after the call to new tmi.client with options
 // will be used to connect to REQUEST_STREAM_LIMIT channels (prolly maximum value, 100)
 var STREAM_CONNECTIONS = [];
-
 // The actual stream objects, contains STREAMS_TO_BE_TRACKED channels
 var STREAMERS = [];
-
+var STILL_COLLECTING = true;
 // ============================================================================
 // Start the app
 main();
@@ -133,7 +130,7 @@ function main() {
           STREAM_CONNECTIONS = [];
           STREAMERS = [];
           STREAMERS_JOINED = 0;
-
+          STILL_COLLECTING = true;
           console.log("\nALL DATA HAS BEEN RESET...\n");
 
           // Just wait a few seconds if we want to tweet or something to let all tweets get through
@@ -150,6 +147,7 @@ function main() {
       }, LURKING_LIVE_TIME);
 
       console.log("\n\n\n\nCollection done! No more tracking of emotes!\n\n\n\n");
+      STILL_COLLECTING = false;
       // Send the last msg before we disconnect.
       // TODO CANT BROADCAST CUZ WE PROLLY OVERFLOW THE CLIENT WITH RESPONSES
       // CUZ WE DONT FOLLOW/SUBBING TO THE CHANNELS TO WE
@@ -183,7 +181,6 @@ function registerListeners(client) {
   // Adress looks something like
   // irc-ws.chat.twitch.tv
   client.on("connected", function(address, port){
-
   });
 
 
@@ -205,28 +202,36 @@ function registerListeners(client) {
         // Continue to check if there was an emote within the message.
       }
 
-      // Looks ugly but both arrays are bounded by
-      // pre-defined constants so the loops are executed in O(1) time
-      // message.includes is upper bound
-      for (streamer of STREAMERS) {
-        let currentChannelName = "#" + streamer.name;
-        if (currentChannelName === channel) {
-          for (supportedEmote of SUPPORTED_EMOTES) {
-            if (message.includes(supportedEmote)) {
-              // Its an supported emote, add +1 to the current channel
-              streamer.emotes[supportedEmote]++;
-              console.log("\nChannel: " + channel + " got +1 of: " + supportedEmote);
-              console.log("Currently has a total of: " + streamer.emotes[supportedEmote]);
-              console.log();
-            }
-            else {
-              // Normal msg... do something fun
-              //TODO commands??
+      // This flag is switched off after NUMBER_OF_HOURS_COLLECTING
+      // Stop wasting cpu cycles to collect when it has passed
+      // we will be in around 3-4000 channels at this time
+      // so focus on catching @spectre_807 instead
+      if (STILL_COLLECTING) {
+        // Looks ugly but both arrays are bounded by
+        // pre-defined constants so the loops are executed in O(1) time
+        // message.includes is upper bound
+        for (streamer of STREAMERS) {
+          let currentChannelName = "#" + streamer.name;
+          if (currentChannelName === channel) {
+            for (supportedEmote of SUPPORTED_EMOTES) {
+              if (message.includes(supportedEmote)) {
+                // Its an supported emote, add +1 to the current channel
+                streamer.emotes[supportedEmote]++;
+                console.log("\nChannel: " + channel + " got +1 of: " + supportedEmote);
+                console.log("Currently has a total of: " + streamer.emotes[supportedEmote]);
+                console.log();
+              }
+              else {
+                // Normal msg... do something fun
+                //TODO commands??
+              }
             }
           }
         }
       }
   });
+
+
 }
 
 // Helper functions
