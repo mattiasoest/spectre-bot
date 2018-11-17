@@ -16,8 +16,8 @@ const SPECTRE_REPLIES = ["All Im telling u is the truth!", "Which pill do u pref
 const NUMBER_OF_HOURS_COLLECTING   = 2;
 const INITIAL_STREAM_LIMIT         = 26;
 const REQUEST_STREAM_LIMIT         = 100;
-const DO_STREAM_REQUEST_TIMES      = 60;
-const SMALL_STREAMER_START_OFFSET  = 1700;
+const DO_STREAM_REQUEST_TIMES      = 80;
+const SMALL_STREAMER_START_OFFSET  = 1100;
 const INITIAL_REQUEST_OFFSET       = 0;
 // 10 streams is good amount for data and tweeting reasons
 const STREAMS_TO_BE_TRACKED        = 10;
@@ -25,10 +25,12 @@ const EMOTE_COLLETION_LIVE_TIME    = 1000*60*60 * NUMBER_OF_HOURS_COLLECTING;
 // Just for expore to get ppl interested, lurking in streams with 1-20 viewers
 // Like who is this guy? and then clicks on the nickname, sees profile sees, sees twitter
 // Guerilla marketing without spamming
-// const LURKING_LIVE_TIME = 1000*60*120;
 const LURKING_LIVE_TIME            = 1000*60*60 * NUMBER_OF_HOURS_COLLECTING * 2.5;
+
 // =============NOT CONSTANTS=============================================================
+
 var STREAMERS_JOINED        = 0;
+var REPLY_MSGS_SENT         = 0;
 var FIRST_FETCHED_STREAMERS = [];
 var STREAM_CONNECTIONS      = [];
 // The actual stream objects, contains STREAMS_TO_BE_TRACKED channels
@@ -42,8 +44,10 @@ main();
 // Implementation
 function main() {
   populateStreamerArrays().then(function () {
-
     // If the offset is 0 then we requesting the top channels
+    // If mistakes r made during testing dont tweet out bad stats
+    // This tweet is based on  calculations based on the top 100 streamers
+    // which requires INITIAL_REQUEST_OFFSET to be 0
     if (INITIAL_REQUEST_OFFSET === 0) {
       let currentViewersTweet = createCurrentViewersTweet();
       twitter_handle.tweet(currentViewersTweet);
@@ -65,7 +69,6 @@ function main() {
     console.log();
     console.log();
     client.connect();
-
     setTimeout(function(){
       // The client.getChannels() contains the currently connected getChannel
       // We have to use this instead of STREAM_CONNECTIONS because may be joining
@@ -106,7 +109,6 @@ function main() {
         console.log(streamer.emotes);
         console.log();
       }
-
       // Stats has been tweeted, now chill in the streams for a bit
       // Hang around streams and idle before connection to new streamers
       // It take roughly 20-25 mins to connect to 500 streams so dont waste it.
@@ -123,9 +125,9 @@ function main() {
           STREAM_CONNECTIONS = [];
           STREAMERS = [];
           STREAMERS_JOINED = 0;
+          REPLY_MSGS_SENT = 0;
           STILL_COLLECTING = true;
           console.log("\nALL DATA HAS BEEN RESET...\n");
-
           // Just wait a few seconds if we want to tweet or something to let all tweets get through
           // probably is enough with 1-2 sec but theres no rush.
           setTimeout(function() {
@@ -146,7 +148,6 @@ function main() {
       // CUZ WE DONT FOLLOW/SUBBING TO THE CHANNELS TO WE
       // GOT DCED TWICE NOW
       // broadcastMsg(client, "=)", client.getChannels());
-
     }, EMOTE_COLLETION_LIVE_TIME);
   });
 }
@@ -176,7 +177,6 @@ function registerListeners(client) {
   client.on("connected", function(address, port){
   });
 
-
   client.on('disconnected', function(reason){
     console.log("Disconnected:", reason)
   });
@@ -192,9 +192,11 @@ function registerListeners(client) {
         let randomIndex = Math.floor(Math.random() * SPECTRE_REPLIES.length);
         let reply = "@" + user.username + " " + SPECTRE_REPLIES[randomIndex];
         client.action(channel, reply);
+        console.log("\n\n========TRIED TO SEND REPLY " + reply + "!========");
+        console.log("========HAS NOW TRIED TO SEND: " + REPLY_MSGS_SENT + "!========\n\n");
+        REPLY_MSGS_SENT++;
         // Continue to check if there was an emote within the message.
       }
-
       // This flag is switched off after NUMBER_OF_HOURS_COLLECTING
       // Stop wasting cpu cycles to collect when it has passed
       // we will be in around 3-4000 channels at this time
@@ -224,7 +226,6 @@ function registerListeners(client) {
       }
   });
 
-
 }
 
 // Helper functions
@@ -236,7 +237,6 @@ async function randomlyPopulateSelectedStreamers() {
       console.log("------DONT REQUEST MORE STREAMERS THAN WE HAVE!!!! Check the const field in app.js!");
       requestedAmount = FIRST_FETCHED_STREAMERS.length;
     }
-
     // Now since we're always using all 100 streams to connect
     // get a copy of the FETCHED_STREAMERS first INITIAL_REQUEST_STREAM_LIMIT elements
     let fetchedCopy = FIRST_FETCHED_STREAMERS.slice(0, INITIAL_STREAM_LIMIT);
@@ -350,7 +350,7 @@ function createOptions() {
       password : consts.twitchPass
     },
     channels : STREAM_CONNECTIONS
-  }
+  };
 }
 
 async function addAdditionalAttributes(streamer) {
@@ -476,5 +476,4 @@ function createCurrentViewersTweet() {
   "where the #top50 channels has a total of: " + top_50 + " viewers\n" +
   "and the #top25 channels has a total of: " + top_25 + " viewers.\n" +
   "A good time to be lurking on the shadows..."};
-
 }
