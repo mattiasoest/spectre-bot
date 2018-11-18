@@ -24,13 +24,13 @@ const SPECTRE_JOIN_MSGS = ["This your last chance. After this there is " +
 
 const MANY_VIEWERS                 = 450000;
 const NUMBER_OF_HOURS_COLLECTING   = 2;
-const INITIAL_STREAM_LIMIT         = 25;
+const INITIAL_STREAM_LIMIT         = 18;
 const REQUEST_STREAM_LIMIT         = 100;
 const DO_STREAM_REQUEST_TIMES      = 130; //At the end we're in ~13k channels
-const SMALL_STREAMER_START_OFFSET  = 33;
+const SMALL_STREAMER_START_OFFSET  = 53;
 const INITIAL_REQUEST_OFFSET       = 0;
 // 10 streams is good amount for data and tweeting reasons
-const STREAMS_TO_BE_TRACKED        = 10;
+const STREAMS_TO_BE_TRACKED        = 8;
 const EMOTE_COLLETION_LIVE_TIME    = 1000*60*60 * NUMBER_OF_HOURS_COLLECTING;
 // Just for expore to get ppl interested, lurking in streams with 1-20 viewers
 // Like who is this guy? and then clicks on the nickname, sees profile sees, sees twitter
@@ -72,7 +72,7 @@ function main() {
     registerListeners(client);
 
     let trackingStreamersTweet = createJoiningInfoTweet();
-    twitter_handle.tweet(trackingStreamersTweet);
+    // twitter_handle.tweet(trackingStreamersTweet);
     console.log("Preparing connection to:", STREAM_CONNECTIONS);
     console.log();
     console.log();
@@ -233,6 +233,28 @@ function registerListeners(client) {
   // TODO Add functionality
   client.on("whisper", function (from, userstate, message, self) {
     if (self) return;
+    });
+
+    // TODO CHECK THIS TOMMORROW TO CATCH ALL
+    client.on("message", function (channel, userstate, message, self) {
+        // Don't listen to my own messages..
+        if (self) return;
+
+        // Handle different message types..
+        switch(userstate["message-type"]) {
+            case "action":
+                // This is an action message..
+                break;
+            case "chat":
+                // This is a chat message..
+                break;
+            case "whisper":
+                // This is a whisper..
+                break;
+            default:
+                // Something else ?
+                break;
+        }
     });
 
   // JUST ADD THERE EVENTS SO THE BOT IS PREPARED AND DONT GET UGLY ERRORS IN THE LOG
