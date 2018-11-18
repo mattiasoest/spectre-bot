@@ -22,9 +22,8 @@ const SPECTRE_JOIN_MSGS = ["This your last chance. After this there is " +
           "sup guys, what's going on here?", //Some random casual msgs to not get flagged for spam
           "hi", "=)", "hi!", "^^", "hello"];
 
-
 const MANY_VIEWERS                 = 450000;
-const NUMBER_OF_HOURS_COLLECTING   = 30;
+const NUMBER_OF_HOURS_COLLECTING   = 2;
 const INITIAL_STREAM_LIMIT         = 25;
 const REQUEST_STREAM_LIMIT         = 100;
 const DO_STREAM_REQUEST_TIMES      = 130; //At the end we're in ~13k channels
@@ -124,8 +123,6 @@ function main() {
         console.log();
         sendMsgToTheBotChannel(tweetText);
       }
-
-
       // Stats has been tweeted, now chill in the streams for a bit
       // Hang around streams and idle before connection to new streamers
       // It take roughly 20-25 mins to connect to 500 streams so dont waste it.
@@ -177,40 +174,45 @@ function main() {
 // ============================================================================
 function registerListeners(client) {
 
-
   // Triggered once joined.
   // TODO use this to check if its sub only
   client.on("roomstate", function (channel, state) {
-    // Do your stuff.
+    STREAMERS_JOINED++;
+    // Dont say anything in chat if its subs only.
+    // We wont be able to deliver it and get error in the logs.
+    if (state['subs-only']) {
+      console.log("\n\nJOINED SUBS ONLY CHANNEL, SKIP JOIN MSG");
+      console.log("\n========Now joined " + STREAMERS_JOINED + " streamers!========\n\n");
+      return;
+    }
+
+    // Bot joined get random join msg, 1 matrix quote and random simple msgs
+    let randomIndex = Math.floor(Math.random() * SPECTRE_JOIN_MSGS.length);
+    let msg = SPECTRE_JOIN_MSGS[randomIndex];
+    if ((STREAMERS_JOINED < CHAT_LIMIT || SEND_EACH_TIME) && ALLOWED_TO_CHAT) {
+        client.action(channel, msg).then(data =>{
+        //Skip the data for now.
+        console.log("\nSent initial Matrix quote.\n");
+        }).catch(err => {
+            console.log("\nFAILED TO SEND JOIN MSG!");
+        });
+    }
+    // Avoid issues of spamming, overflow of failed responses etc..
+    // Now send every 2nd or 3rd time we join.
+    else if ((STREAMERS_JOINED % 2 === 0 && STREAMERS_JOINED < CHAT_LIMIT * 1.7) && ALLOWED_TO_CHAT) {
+        client.action(channel, msg).then(data =>{
+        //Skip the data for now.
+        console.log("\nSent initial Matrix quote.\n");
+        }).catch(err => {
+            console.log("\nFAILED TO SEND JOIN MSG!\n");
+        });
+    }
+    console.log("\n========Now joined " + STREAMERS_JOINED + " streamers!========\n");
   });
 
   // It take about 4-5 minutes to join 100 channels
   client.on("join", function (channel, username, self) {
-    // Bot joined get random join msg, 1 matrix quote and random simple msgs
-    let randomIndex = Math.floor(Math.random() * SPECTRE_JOIN_MSGS.length);
-    let msg = SPECTRE_JOIN_MSGS[randomIndex];
-    if (self) {
-      if ((STREAMERS_JOINED < CHAT_LIMIT || SEND_EACH_TIME) && ALLOWED_TO_CHAT) {
-          client.action(channel, msg).then(data =>{
-          //Skip the data for now.
-          console.log("\nSent initial Matrix quote.\n");
-          }).catch(err => {
-              console.log("\nFAILED TO SEND JOIN MSG!");
-          });
-      }
-      // Avoid issues of spamming, overflow of failed responses etc..
-      // Now send every 2nd or 3rd time we join.
-      else if ((STREAMERS_JOINED % 2 === 0 && STREAMERS_JOINED < CHAT_LIMIT * 1.7) && ALLOWED_TO_CHAT) {
-          client.action(channel, msg).then(data =>{
-          //Skip the data for now.
-          console.log("\nSent initial Matrix quote.\n");
-          }).catch(err => {
-              console.log("\nFAILED TO SEND JOIN MSG!\n");
-          });
-      }
-      console.log("\n========Now joined " + STREAMERS_JOINED + " streamers!========\n");
-      STREAMERS_JOINED++;
-    }
+    if (self) return;
   });
 
   // Adress looks something like
@@ -231,7 +233,6 @@ function registerListeners(client) {
   // TODO Add functionality
   client.on("whisper", function (from, userstate, message, self) {
     if (self) return;
-
     });
 
   // JUST ADD THERE EVENTS SO THE BOT IS PREPARED AND DONT GET UGLY ERRORS IN THE LOG
