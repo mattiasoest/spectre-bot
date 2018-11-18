@@ -176,6 +176,14 @@ function main() {
 
 // ============================================================================
 function registerListeners(client) {
+
+
+  // Triggered once joined.
+  // TODO use this to check if its sub only
+  client.on("roomstate", function (channel, state) {
+    // Do your stuff.
+  });
+
   // It take about 4-5 minutes to join 100 channels
   client.on("join", function (channel, username, self) {
     // Bot joined get random join msg, 1 matrix quote and random simple msgs
@@ -210,67 +218,67 @@ function registerListeners(client) {
   client.on("connected", function(address, port){
   });
 
+  client.on("reconnect", function () {
+    //Trying to reconnect... log it?
+  });
+
   client.on('disconnected', function(reason){
     SEND_EACH_TIME = false;
     console.log("Disconnected:", reason)
     console.log("Got disconnected chill with the join msg's, set SEND_EACH_TIME = false");
   });
 
-  client.on("chat", function(channel, user, message, self) {
-      if (self) {
-        // Ignore the bot's msg's
-        return;
-      }
-      if (ALLOWED_TO_CHAT) {
-        if (message.toLowerCase().includes("?" + config.userName)) {
-          // Reply to the user
-          let randomIndex = Math.floor(Math.random() * SPECTRE_REPLIES.length);
-          let reply = "@" + user.username + " " + SPECTRE_REPLIES[randomIndex];
-          client.action(channel, reply).then(data =>{
-            REPLY_MSGS_SENT++;
-            // Skip data for now, keep it if we want to change something.
-            console.log("\n\n========SUCCESSFULLY SEND REPLY " + reply + "!========");
-            console.log("========NOW SENT A TOTAL OF REPLIES " + REPLY_MSGS_SENT + "!========\n\n");
+  // TODO Add functionality
+  client.on("whisper", function (from, userstate, message, self) {
+    if (self) return;
 
-            }).catch(err => {
-                FAILED_REPLY_SENT++;
-                console.log("\n\nFAILED TO SEND REPLY AFTER ?" + config.userName);
-                console.log("========HAS NOW TRIED TO SEND: " + FAILED_REPLY_SENT + "!========\n\n");
-            });
-          // Continue to check if there was an emote within the message.
-        }
-      }
+    });
 
-      // This flag is switched off after NUMBER_OF_HOURS_COLLECTING
-      // Stop wasting cpu cycles to collect when it has passed
-      // we will be in around 3-4000 channels at this time
-      if (STILL_COLLECTING) {
-        // Looks ugly but both arrays are bounded by
-        // pre-defined constants so the loops are executed in O(1) time
-        // message.includes is upper bound
-        for (streamer of STREAMERS) {
-          let currentChannelName = "#" + streamer.name;
-          if (currentChannelName === channel) {
-            for (supportedEmote of SUPPORTED_EMOTES) {
-              if (message.includes(supportedEmote)) {
-                // Its an supported emote, add +1 to the current channel
-                streamer.emotes[supportedEmote]++;
-                console.log("\nChannel: " + channel + " got +1 of: " + supportedEmote);
-                console.log("Currently has a total of: " + streamer.emotes[supportedEmote]);
-                console.log();
-              }
-              else {
-                // Normal msg... do something fun
-                //TODO commands??
-              }
-            }
-          }
-        }
-      }
+  // JUST ADD THERE EVENTS SO THE BOT IS PREPARED AND DONT GET UGLY ERRORS IN THE LOG
+  client.on("cheer", function (channel, userstate, message) {
   });
-
+  client.on("action", function (channel, userstate, message, self) {
+    if (self) return;
+  });
+  client.on("clearchat", function (channel) {
+  });
+  client.on("emoteonly", function (channel, enabled) {
+  });
+  client.on("emotesets", function(sets, obj) {
+    // Here are the emotes I can use:
+    // console.log(obj);
+  });
+  client.on("followersonly", function (channel, enabled, length) {
+  });
+  client.on("hosted", function (channel, username, viewers, autohost) {
+  });
+  client.on("mod", function (channel, username) {
+  });
+  client.on("mods", function (channel, mods) {
+  });
+  client.on("serverchange", function (channel) {
+  });
+  client.on("slowmode", function (channel, enabled, length) {
+  });
+  client.on("subscribers", function (channel, enabled) {
+  });
+  client.on("unmod", function (channel, username) {
+  });
+  client.on("unhost", function (channel, viewers) {
+  });
+  client.on("timeout", function (channel, username, reason, duration) {
+  });
+  client.on("r9kbeta", function (channel, enabled) {
+  });
+  client.on("pong", function (latency) {
+  });
+  client.on("ping", function () {
+  });
+  client.on("notice", function (channel, msgid, message) {
+  });
 }
 
+//=============================================================
 // Helper functions
 async function randomlyPopulateSelectedStreamers() {
     console.log("Starting the picking process...");
