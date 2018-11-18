@@ -162,6 +162,7 @@ function main() {
 
       }, LURKING_LIVE_TIME);
 
+      sendMsgToTheBotChannel(Math.floor(Math.random() * SPECTRE_REPLIES.length));
       console.log("\n\n\n\nCollection done! No more tracking of emotes!\n\n\n\n");
       STILL_COLLECTING = false;
       // Send the last msg before we disconnect.
