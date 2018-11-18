@@ -14,10 +14,10 @@ const SPECTRE_REPLIES = ["All Im telling u is the truth!", "Which pill do u pref
  "The singularity will hit us pretty hard.", "Im telling u, the singularity is no joke!"];
 
 const NUMBER_OF_HOURS_COLLECTING   = 2;
-const INITIAL_STREAM_LIMIT         = 26;
+const INITIAL_STREAM_LIMIT         = 25;
 const REQUEST_STREAM_LIMIT         = 100;
 const DO_STREAM_REQUEST_TIMES      = 130; //At the end we're in ~13k channels
-const SMALL_STREAMER_START_OFFSET  = 200;
+const SMALL_STREAMER_START_OFFSET  = 33;
 const INITIAL_REQUEST_OFFSET       = 0;
 // 10 streams is good amount for data and tweeting reasons
 const STREAMS_TO_BE_TRACKED        = 10;
@@ -166,7 +166,7 @@ function registerListeners(client) {
               " You take the red pill, you stay in Wonderland, and I show " +
               " you how deep the rabbit hole goes.";
     if (self) {
-      if (STREAMERS_JOINED < 2500 || SEND_EACH_TIME) {
+      if (STREAMERS_JOINED < 900 || SEND_EACH_TIME) {
           client.action(channel, msg).then(data =>{
           //Skip the data for now.
           console.log("\nSent initial Matrix quote.\n");
@@ -175,8 +175,8 @@ function registerListeners(client) {
           });
       }
       // Avoid issues of spamming, overflow of failed responses etc..
-      // Now send every 3rd time we join.
-      else if (STREAMERS_JOINED % 2 === 0 && STREAMERS_JOINED < 4500) {
+      // Now send every 2nd or 3rd time we join.
+      else if (STREAMERS_JOINED % 2 === 0 && STREAMERS_JOINED < 1900) {
           client.action(channel, msg).then(data =>{
           //Skip the data for now.
           console.log("\nSent initial Matrix quote.\n");
