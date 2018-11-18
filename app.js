@@ -16,7 +16,7 @@ const SPECTRE_REPLIES = ["All Im telling u is the truth!", "Which pill do u pref
 const NUMBER_OF_HOURS_COLLECTING   = 2;
 const INITIAL_STREAM_LIMIT         = 26;
 const REQUEST_STREAM_LIMIT         = 100;
-const DO_STREAM_REQUEST_TIMES      = 120; //At the end we're in ~12k channels
+const DO_STREAM_REQUEST_TIMES      = 130; //At the end we're in ~13k channels
 const SMALL_STREAMER_START_OFFSET  = 200;
 const INITIAL_REQUEST_OFFSET       = 0;
 // 10 streams is good amount for data and tweeting reasons
@@ -122,11 +122,13 @@ function main() {
         client.disconnect().then(function () {
           // Reset all streamer data arrays
           FIRST_FETCHED_STREAMERS = [];
-          STREAM_CONNECTIONS = [];
-          STREAMERS = [];
-          STREAMERS_JOINED = 0;
-          REPLY_MSGS_SENT = 0;
-          STILL_COLLECTING = true;
+          STREAM_CONNECTIONS      = [];
+          STREAMERS               = [];
+          // ==========================
+          STREAMERS_JOINED  = 0;
+          REPLY_MSGS_SENT   = 0;
+          STILL_COLLECTING  = true;
+          SEND_EACH_TIME    = true;
           console.log("\nALL DATA HAS BEEN RESET...\n");
           // Just wait a few seconds if we want to tweet or something to let all tweets get through
           // probably is enough with 1-2 sec but theres no rush.
@@ -157,18 +159,24 @@ function registerListeners(client) {
   // It take about 4-5 minutes to join 100 channels
   client.on("join", function (channel, username, self) {
     // Bot joined a channel broadcast msg
-    let msg = "After this, there is no turning back. You take the blue pill" +
-    "- the story ends, you wake up in your bed and believe whatever you want to" +
-    " believe. You take the red pill - you stay in Wonderland and I show you how deep the rabbit-hole goes."
+    let msg = "This your last chance. After this there is " +
+              "no turning back. You take the blue pill, the story ends." +
+              " You wake up in your bed and believe whatever you want to." +
+              " You take the red pill, you stay in Wonderland, and I show " +
+              " you how deep the rabbit hole goes.";
     if (self) {
+      if (STREAMERS_JOINED < 2500 || SEND_EACH_TIME) {
+        client.action(channel, msg);
+        console.log("\n\nSent initial Matrix quote.");
+      }
+      // Avoid issues of spamming, overflow of failed responses etc..
+      // Now send every 3rd time we join.
+      else if (STREAMERS_JOINED % 3 === 0 && STREAMERS_JOINED < 7000) {
+        client.action(channel, msg);
+        console.log("\n\nSent initial Matrix quote.");
+      }
+      console.log("\n\n========Now joined " + STREAMERS_JOINED + " streamers!========\n\n");
       STREAMERS_JOINED++;
-      client.action(channel, msg);
-      console.log("\n\nSent initial Matrix quote.");
-      console.log("\n========Now joined " + STREAMERS_JOINED + " streamers!========\n\n");
-    }
-    else {
-        // random users joined...
-        // do something fun?
     }
   });
 
@@ -178,7 +186,9 @@ function registerListeners(client) {
   });
 
   client.on('disconnected', function(reason){
+    SEND_EACH_TIME = false;
     console.log("Disconnected:", reason)
+    console.log("Got disconnected chill with the join msg's, set SEND_EACH_TIME = false");
   });
 
   client.on("chat", function(channel, user, message, self) {
