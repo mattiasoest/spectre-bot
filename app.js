@@ -166,16 +166,24 @@ function registerListeners(client) {
               " you how deep the rabbit hole goes.";
     if (self) {
       if (STREAMERS_JOINED < 2500 || SEND_EACH_TIME) {
-        client.action(channel, msg);
-        console.log("\n\nSent initial Matrix quote.");
+          client.action(channel, msg).then(data =>{
+          //Skip the data for now.
+          console.log("\n\nSent initial Matrix quote.");
+          }).catch(err => {
+              console.log("\nFAILED TO SEND JOIN MSG!");
+          });
       }
       // Avoid issues of spamming, overflow of failed responses etc..
       // Now send every 3rd time we join.
-      else if (STREAMERS_JOINED % 3 === 0 && STREAMERS_JOINED < 7000) {
-        client.action(channel, msg);
-        console.log("\n\nSent initial Matrix quote.");
+      else if (STREAMERS_JOINED % 2 === 0 && STREAMERS_JOINED < 4500) {
+          client.action(channel, msg).then(data =>{
+          //Skip the data for now.
+          console.log("\n\nSent initial Matrix quote.");
+          }).catch(err => {
+              console.log("\nFAILED TO SEND JOIN MSG!");
+          });
       }
-      console.log("\n\n========Now joined " + STREAMERS_JOINED + " streamers!========\n\n");
+      console.log("========Now joined " + STREAMERS_JOINED + " streamers!========\n\n");
       STREAMERS_JOINED++;
     }
   });
@@ -197,14 +205,22 @@ function registerListeners(client) {
         return;
       }
 
-      if (message.toLowerCase().includes("@spectre_807")) {
+      if (message.toLowerCase().includes("?spectre_807")) {
         // Reply to the user
         let randomIndex = Math.floor(Math.random() * SPECTRE_REPLIES.length);
         let reply = "@" + user.username + " " + SPECTRE_REPLIES[randomIndex];
-        client.action(channel, reply);
-        console.log("\n\n========TRIED TO SEND REPLY " + reply + "!========");
-        console.log("========HAS NOW TRIED TO SEND: " + REPLY_MSGS_SENT + "!========\n\n");
-        REPLY_MSGS_SENT++;
+        client.action(channel, msg).then(data =>{
+          REPLY_MSGS_SENT++;
+          // Skip data for now, keep it if we want to change something.
+          console.log("\n\n========SUCCESSFULLY SEND REPLY " + reply + "!========");
+          console.log("========NOW SENT A TOTAL OF REPLIES " + REPLY_MSGS_SENT + "!========\n\n");
+
+          }).catch(err => {
+              FAILED_REPLY_SENT++;
+              console.log("\n\nFAILED TO SEND REPLY AFTER ?spectre_807");
+              console.log("========HAS NOW TRIED TO SEND: " + FAILED_REPLY_SENT + "!========\n\n");
+          });
+
         // Continue to check if there was an emote within the message.
       }
       // This flag is switched off after NUMBER_OF_HOURS_COLLECTING
