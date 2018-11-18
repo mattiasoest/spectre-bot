@@ -45,6 +45,7 @@ var STREAM_CONNECTIONS      = [];
 // The actual stream objects, contains STREAMS_TO_BE_TRACKED channels
 var STREAMERS               = [];
 var STILL_COLLECTING        = true;
+var SEND_EACH_TIME          = true;
 // ============================================================================
 // Start the app
 main();
@@ -79,6 +80,8 @@ function main() {
     console.log();
     client.connect();
     setTimeout(function(){
+
+      sendMsgToTheBotChannel("Nothing happens here, check my https://twitter.com/" + config.userName + " to see where Im at...");
       // The client.getChannels() contains the currently connected getChannel
       // We have to use this instead of STREAM_CONNECTIONS because may be joining
       // alot of channels (over 1k) and it take around 30-35 mins to join them all
@@ -117,7 +120,10 @@ function main() {
         console.log("Collected: ");
         console.log(streamer.emotes);
         console.log();
+        sendMsgToTheBotChannel(tweetText);
       }
+
+
       // Stats has been tweeted, now chill in the streams for a bit
       // Hang around streams and idle before connection to new streamers
       // It take roughly 20-25 mins to connect to 500 streams so dont waste it.
@@ -125,7 +131,7 @@ function main() {
       // We dont want to spam twitter too much anyway.
       // 2 more hours lurking
       setTimeout(function() {
-
+        sendMsgToTheBotChannel(Math.floor(Math.random() * SPECTRE_REPLIES.length);
         console.log("\nDISCONNECTING... PREPARING NEW CONNECTIONS!\n");
         // After successfull disconnect go back to top of main()
         client.disconnect().then(function () {
@@ -143,6 +149,7 @@ function main() {
           // Just wait a few seconds if we want to tweet or something to let all tweets get through
           // probably is enough with 1-2 sec but theres no rush.
           setTimeout(function() {
+            sendMsgToTheBotChannel(Math.floor(Math.random() * SPECTRE_REPLIES.length);
             // Use recursion back to the top
             main();
           }, 10000);
@@ -212,7 +219,7 @@ function registerListeners(client) {
         return;
       }
       if (ALLOWED_TO_CHAT) {
-        if (message.toLowerCase().includes("?spectre_807")) {
+        if (message.toLowerCase().includes("?" + config.userName)) {
           // Reply to the user
           let randomIndex = Math.floor(Math.random() * SPECTRE_REPLIES.length);
           let reply = "@" + user.username + " " + SPECTRE_REPLIES[randomIndex];
@@ -224,7 +231,7 @@ function registerListeners(client) {
 
             }).catch(err => {
                 FAILED_REPLY_SENT++;
-                console.log("\n\nFAILED TO SEND REPLY AFTER ?spectre_807");
+                console.log("\n\nFAILED TO SEND REPLY AFTER ?" + config.userName);
                 console.log("========HAS NOW TRIED TO SEND: " + FAILED_REPLY_SENT + "!========\n\n");
             });
           // Continue to check if there was an emote within the message.
@@ -234,7 +241,6 @@ function registerListeners(client) {
       // This flag is switched off after NUMBER_OF_HOURS_COLLECTING
       // Stop wasting cpu cycles to collect when it has passed
       // we will be in around 3-4000 channels at this time
-      // so focus on catching @spectre_807 instead
       if (STILL_COLLECTING) {
         // Looks ugly but both arrays are bounded by
         // pre-defined constants so the loops are executed in O(1) time
@@ -290,7 +296,8 @@ async function randomlyPopulateSelectedStreamers() {
       console.log();
       requestedAmount--;
       }
-
+      //Also add the bot himself in the beginning of the connections array
+      STREAM_CONNECTIONS.push("#" + config.userName);
       console.log();
 }
 
@@ -510,4 +517,15 @@ function createCurrentViewersTweet() {
   "where the #top50 channels has a total of: " + top_50 + " viewers\n" +
   "and the #top25 channels has a total of: " + top_25 + " viewers.\n" +
   "A good time to be lurking on the shadows..."};
+}
+
+//In case ppl lurks in the channel.
+function sendMsgToTheBotChannel(msg) {
+  client.action("#" + config.userName, msg).then(data =>{
+    //Skip the data for now.
+    console.log("\nSent msg in #" + config.userName + "\n");
+    }).catch(err => {
+        console.log("\nFAILED to sen msg in #" + config.userName + "!\n");
+    });
+  }
 }
