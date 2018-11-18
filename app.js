@@ -24,7 +24,7 @@ const SPECTRE_JOIN_MSGS = ["This your last chance. After this there is " +
 
 
 const MANY_VIEWERS                 = 450000;
-const NUMBER_OF_HOURS_COLLECTING   = 2;
+const NUMBER_OF_HOURS_COLLECTING   = 30;
 const INITIAL_STREAM_LIMIT         = 25;
 const REQUEST_STREAM_LIMIT         = 100;
 const DO_STREAM_REQUEST_TIMES      = 130; //At the end we're in ~13k channels
