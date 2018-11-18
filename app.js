@@ -131,7 +131,7 @@ function main() {
       // We dont want to spam twitter too much anyway.
       // 2 more hours lurking
       setTimeout(function() {
-        sendMsgToTheBotChannel(Math.floor(Math.random() * SPECTRE_REPLIES.length);
+        sendMsgToTheBotChannel(Math.floor(Math.random() * SPECTRE_REPLIES.length));
         console.log("\nDISCONNECTING... PREPARING NEW CONNECTIONS!\n");
         // After successfull disconnect go back to top of main()
         client.disconnect().then(function () {
