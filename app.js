@@ -16,8 +16,8 @@ const SPECTRE_REPLIES = ["All Im telling u is the truth!", "Which pill do u pref
 const NUMBER_OF_HOURS_COLLECTING   = 2;
 const INITIAL_STREAM_LIMIT         = 26;
 const REQUEST_STREAM_LIMIT         = 100;
-const DO_STREAM_REQUEST_TIMES      = 82;
-const SMALL_STREAMER_START_OFFSET  = 1000;
+const DO_STREAM_REQUEST_TIMES      = 120; //At the end we're in ~12k channels
+const SMALL_STREAMER_START_OFFSET  = 200;
 const INITIAL_REQUEST_OFFSET       = 0;
 // 10 streams is good amount for data and tweeting reasons
 const STREAMS_TO_BE_TRACKED        = 10;
