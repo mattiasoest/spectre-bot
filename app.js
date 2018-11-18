@@ -1,5 +1,6 @@
 const tmi            = require("tmi.js");
 const config         = require("./live_config");
+// const config         = require("./consts");
 const twitter_handle = require("./tweet_handler.js");
 const request        = require('request');
 const fs             = require('fs');
@@ -22,6 +23,7 @@ const SPECTRE_JOIN_MSGS = ["This your last chance. After this there is " +
           "hi", "=)", "hi!", "^^", "hello"];
 
 
+const MANY_VIEWERS                 = 450000;
 const NUMBER_OF_HOURS_COLLECTING   = 2;
 const INITIAL_STREAM_LIMIT         = 25;
 const REQUEST_STREAM_LIMIT         = 100;
@@ -37,7 +39,8 @@ const EMOTE_COLLETION_LIVE_TIME    = 1000*60*60 * NUMBER_OF_HOURS_COLLECTING;
 const LURKING_LIVE_TIME            = 1000*60*60 * NUMBER_OF_HOURS_COLLECTING * 2.75;
 const ALLOWED_TO_CHAT              = false;
 // =============NOT CONSTANTS=============================================================
-
+var CHAT_LIMIT              = 900; //Maye change during execution.
+var TOP_100_STREAMERS       = 0;
 var STREAMERS_JOINED        = 0;
 var REPLY_MSGS_SENT         = 0;
 var FIRST_FETCHED_STREAMERS = [];
@@ -64,9 +67,9 @@ function main() {
       console.log("\n\n====TWEETED CURRENT VIEWERS STATS====\n\n");
     }
 
+    updateMsgLimits();
     var options = createOptions();
     var client = new tmi.client(options);
-
     registerListeners(client);
 
     let trackingStreamersTweet = createJoiningInfoTweet();
@@ -80,7 +83,6 @@ function main() {
     console.log();
     client.connect();
     setTimeout(function(){
-
       sendMsgToTheBotChannel("Nothing happens here, check my https://twitter.com/" + config.userName + " to see where Im at...");
       // The client.getChannels() contains the currently connected getChannel
       // We have to use this instead of STREAM_CONNECTIONS because may be joining
@@ -149,7 +151,7 @@ function main() {
           // Just wait a few seconds if we want to tweet or something to let all tweets get through
           // probably is enough with 1-2 sec but theres no rush.
           setTimeout(function() {
-            sendMsgToTheBotChannel(Math.floor(Math.random() * SPECTRE_REPLIES.length);
+            sendMsgToTheBotChannel(Math.floor(Math.random() * SPECTRE_REPLIES.length));
             // Use recursion back to the top
             main();
           }, 10000);
@@ -179,7 +181,7 @@ function registerListeners(client) {
     let randomIndex = Math.floor(Math.random() * SPECTRE_JOIN_MSGS.length);
     let msg = SPECTRE_JOIN_MSGS[randomIndex];
     if (self) {
-      if ((STREAMERS_JOINED < 900 || SEND_EACH_TIME) && ALLOWED_TO_CHAT) {
+      if ((STREAMERS_JOINED < CHAT_LIMIT || SEND_EACH_TIME) && ALLOWED_TO_CHAT) {
           client.action(channel, msg).then(data =>{
           //Skip the data for now.
           console.log("\nSent initial Matrix quote.\n");
@@ -189,7 +191,7 @@ function registerListeners(client) {
       }
       // Avoid issues of spamming, overflow of failed responses etc..
       // Now send every 2nd or 3rd time we join.
-      else if ((STREAMERS_JOINED % 2 === 0 && STREAMERS_JOINED < 1900) && ALLOWED_TO_CHAT) {
+      else if ((STREAMERS_JOINED % 2 === 0 && STREAMERS_JOINED < CHAT_LIMIT * 1.7) && ALLOWED_TO_CHAT) {
           client.action(channel, msg).then(data =>{
           //Skip the data for now.
           console.log("\nSent initial Matrix quote.\n");
@@ -512,6 +514,7 @@ function createCurrentViewersTweet() {
       continue;
     }
   }
+  TOP_100_STREAMERS = top_100;
   return tweet = { status : "Viewers currently @ https://www.twitch.tv/ \n" +
   "#top100 channels has a total of: " + top_100 + " viewers\n" +
   "where the #top50 channels has a total of: " + top_50 + " viewers\n" +
@@ -528,4 +531,7 @@ function sendMsgToTheBotChannel(msg) {
         console.log("\nFAILED to sen msg in #" + config.userName + "!\n");
     });
   }
-}
+
+  function updateMsgLimits() {
+    TOP_100_STREAMERS > MANY_VIEWERS ? CHAT_LIMIT = CHAT_LIMIT * 2 : CHAT_LIMIT;
+  }

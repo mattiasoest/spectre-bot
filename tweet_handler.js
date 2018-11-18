@@ -1,5 +1,6 @@
 const Twit  = require("twit");
 const config = require("./live_config");
+// const config = require("./consts");
 
 var T = new Twit({
   consumer_key:         config.twitter_consumer_key,
