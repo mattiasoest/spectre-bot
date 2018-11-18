@@ -26,7 +26,7 @@ const EMOTE_COLLETION_LIVE_TIME    = 1000*60*60 * NUMBER_OF_HOURS_COLLECTING;
 // Like who is this guy? and then clicks on the nickname, sees profile sees, sees twitter
 // Guerilla marketing without spamming
 const LURKING_LIVE_TIME            = 1000*60*60 * NUMBER_OF_HOURS_COLLECTING * 2.75;
-
+const ALLOWED_TO_CHAT              = false;
 // =============NOT CONSTANTS=============================================================
 
 var STREAMERS_JOINED        = 0;
@@ -166,7 +166,7 @@ function registerListeners(client) {
               " You take the red pill, you stay in Wonderland, and I show " +
               " you how deep the rabbit hole goes.";
     if (self) {
-      if (STREAMERS_JOINED < 900 || SEND_EACH_TIME) {
+      if ((STREAMERS_JOINED < 900 || SEND_EACH_TIME) && ALLOWED_TO_CHAT) {
           client.action(channel, msg).then(data =>{
           //Skip the data for now.
           console.log("\nSent initial Matrix quote.\n");
@@ -176,7 +176,7 @@ function registerListeners(client) {
       }
       // Avoid issues of spamming, overflow of failed responses etc..
       // Now send every 2nd or 3rd time we join.
-      else if (STREAMERS_JOINED % 2 === 0 && STREAMERS_JOINED < 1900) {
+      else if ((STREAMERS_JOINED % 2 === 0 && STREAMERS_JOINED < 1900) && ALLOWED_TO_CHAT) {
           client.action(channel, msg).then(data =>{
           //Skip the data for now.
           console.log("\nSent initial Matrix quote.\n");
@@ -205,25 +205,26 @@ function registerListeners(client) {
         // Ignore the bot's msg's
         return;
       }
+      if (ALLOWED_TO_CHAT) {
+        if (message.toLowerCase().includes("?spectre_807")) {
+          // Reply to the user
+          let randomIndex = Math.floor(Math.random() * SPECTRE_REPLIES.length);
+          let reply = "@" + user.username + " " + SPECTRE_REPLIES[randomIndex];
+          client.action(channel, reply).then(data =>{
+            REPLY_MSGS_SENT++;
+            // Skip data for now, keep it if we want to change something.
+            console.log("\n\n========SUCCESSFULLY SEND REPLY " + reply + "!========");
+            console.log("========NOW SENT A TOTAL OF REPLIES " + REPLY_MSGS_SENT + "!========\n\n");
 
-      if (message.toLowerCase().includes("?spectre_807")) {
-        // Reply to the user
-        let randomIndex = Math.floor(Math.random() * SPECTRE_REPLIES.length);
-        let reply = "@" + user.username + " " + SPECTRE_REPLIES[randomIndex];
-        client.action(channel, reply).then(data =>{
-          REPLY_MSGS_SENT++;
-          // Skip data for now, keep it if we want to change something.
-          console.log("\n\n========SUCCESSFULLY SEND REPLY " + reply + "!========");
-          console.log("========NOW SENT A TOTAL OF REPLIES " + REPLY_MSGS_SENT + "!========\n\n");
-
-          }).catch(err => {
-              FAILED_REPLY_SENT++;
-              console.log("\n\nFAILED TO SEND REPLY AFTER ?spectre_807");
-              console.log("========HAS NOW TRIED TO SEND: " + FAILED_REPLY_SENT + "!========\n\n");
-          });
-
-        // Continue to check if there was an emote within the message.
+            }).catch(err => {
+                FAILED_REPLY_SENT++;
+                console.log("\n\nFAILED TO SEND REPLY AFTER ?spectre_807");
+                console.log("========HAS NOW TRIED TO SEND: " + FAILED_REPLY_SENT + "!========\n\n");
+            });
+          // Continue to check if there was an emote within the message.
+        }
       }
+
       // This flag is switched off after NUMBER_OF_HOURS_COLLECTING
       // Stop wasting cpu cycles to collect when it has passed
       // we will be in around 3-4000 channels at this time
