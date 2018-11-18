@@ -13,6 +13,15 @@ const SPECTRE_REPLIES = ["All Im telling u is the truth!", "Which pill do u pref
  "U think you're special? We're all in this toghether.", "Sometimes I wonder, what if...",
  "The singularity will hit us pretty hard.", "Im telling u, the singularity is no joke!"];
 
+const SPECTRE_JOIN_MSGS = ["This your last chance. After this there is " +
+          "no turning back. You take the blue pill, the story ends." +
+          " You wake up in your bed and believe whatever you want to." +
+          " You take the red pill, you stay in Wonderland, and I show " +
+          " you how deep the rabbit hole goes.",
+          "sup guys, what's going on here?", //Some random casual msgs to not get flagged for spam
+          "hi", "=)", "hi!", "^^", "hello"];
+
+
 const NUMBER_OF_HOURS_COLLECTING   = 2;
 const INITIAL_STREAM_LIMIT         = 25;
 const REQUEST_STREAM_LIMIT         = 100;
@@ -159,12 +168,9 @@ function main() {
 function registerListeners(client) {
   // It take about 4-5 minutes to join 100 channels
   client.on("join", function (channel, username, self) {
-    // Bot joined a channel broadcast msg
-    let msg = "This your last chance. After this there is " +
-              "no turning back. You take the blue pill, the story ends." +
-              " You wake up in your bed and believe whatever you want to." +
-              " You take the red pill, you stay in Wonderland, and I show " +
-              " you how deep the rabbit hole goes.";
+    // Bot joined get random join msg, 1 matrix quote and random simple msgs
+    let randomIndex = Math.floor(Math.random() * SPECTRE_JOIN_MSGS.length);
+    let msg = SPECTRE_JOIN_MSGS[randomIndex];
     if (self) {
       if ((STREAMERS_JOINED < 900 || SEND_EACH_TIME) && ALLOWED_TO_CHAT) {
           client.action(channel, msg).then(data =>{
