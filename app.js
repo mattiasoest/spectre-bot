@@ -127,6 +127,7 @@ function main() {
           // ==========================
           STREAMERS_JOINED  = 0;
           REPLY_MSGS_SENT   = 0;
+          FAILED_REPLY_SENT = 0;
           STILL_COLLECTING  = true;
           SEND_EACH_TIME    = true;
           console.log("\nALL DATA HAS BEEN RESET...\n");
@@ -168,7 +169,7 @@ function registerListeners(client) {
       if (STREAMERS_JOINED < 2500 || SEND_EACH_TIME) {
           client.action(channel, msg).then(data =>{
           //Skip the data for now.
-          console.log("\n\nSent initial Matrix quote.");
+          console.log("\nSent initial Matrix quote.\n");
           }).catch(err => {
               console.log("\nFAILED TO SEND JOIN MSG!");
           });
@@ -178,12 +179,12 @@ function registerListeners(client) {
       else if (STREAMERS_JOINED % 2 === 0 && STREAMERS_JOINED < 4500) {
           client.action(channel, msg).then(data =>{
           //Skip the data for now.
-          console.log("\n\nSent initial Matrix quote.");
+          console.log("\nSent initial Matrix quote.\n");
           }).catch(err => {
-              console.log("\nFAILED TO SEND JOIN MSG!");
+              console.log("\nFAILED TO SEND JOIN MSG!\n");
           });
       }
-      console.log("========Now joined " + STREAMERS_JOINED + " streamers!========\n\n");
+      console.log("\n========Now joined " + STREAMERS_JOINED + " streamers!========\n");
       STREAMERS_JOINED++;
     }
   });
@@ -209,7 +210,7 @@ function registerListeners(client) {
         // Reply to the user
         let randomIndex = Math.floor(Math.random() * SPECTRE_REPLIES.length);
         let reply = "@" + user.username + " " + SPECTRE_REPLIES[randomIndex];
-        client.action(channel, msg).then(data =>{
+        client.action(channel, reply).then(data =>{
           REPLY_MSGS_SENT++;
           // Skip data for now, keep it if we want to change something.
           console.log("\n\n========SUCCESSFULLY SEND REPLY " + reply + "!========");
