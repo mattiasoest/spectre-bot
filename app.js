@@ -22,7 +22,8 @@ const SPECTRE_JOIN_MSGS = ["This your last chance. After this there is " +
           "sup guys, what's going on here?", //Some random casual msgs to not get flagged for spam
           "hi", "=)", "hi!", "^^", "hello"];
 
-const MANY_VIEWERS                 = 450000;
+const MANY_VIEWERS                 = 5550000;
+const FEW_VIEWERS                  = 270000;
 const NUMBER_OF_HOURS_COLLECTING   = 0.5;
 const INITIAL_STREAM_LIMIT         = 20;
 const REQUEST_STREAM_LIMIT         = 100;
@@ -130,7 +131,7 @@ function main() {
       // We dont want to spam twitter too much anyway.
       // 2 more hours lurking
       setTimeout(function() {
-        sendMsgToTheBotChannel(client, Math.floor(Math.random() * SPECTRE_REPLIES.length));
+        sendMsgToTheBotChannel(client, SPECTRE_REPLIES[Math.floor(Math.random() * SPECTRE_REPLIES.length)]);
         console.log("\nDISCONNECTING... PREPARING NEW CONNECTIONS!\n");
         // After successfull disconnect go back to top of main()
         client.disconnect().then(function () {
@@ -148,7 +149,7 @@ function main() {
           // Just wait a few seconds if we want to tweet or something to let all tweets get through
           // probably is enough with 1-2 sec but theres no rush.
           setTimeout(function() {
-            sendMsgToTheBotChannel(client, Math.floor(Math.random() * SPECTRE_REPLIES.length));
+            sendMsgToTheBotChannel(client, "Type ?" + config.userName + "in chat.");
             // Keep track of how many times the bot has executed the code.
             MAIN_EXECUTIONS++;
             // Use recursion back to the top
@@ -161,7 +162,7 @@ function main() {
 
       }, LURKING_LIVE_TIME);
 
-      sendMsgToTheBotChannel(client, Math.floor(Math.random() * SPECTRE_REPLIES.length));
+      sendMsgToTheBotChannel(client, SPECTRE_REPLIES[Math.floor(Math.random() * SPECTRE_REPLIES.length)]);
       console.log("\nCollection done! No more tracking of emotes!\n");
       STILL_COLLECTING = false;
       // Send the last msg before we disconnect.
@@ -176,15 +177,11 @@ function main() {
 // ============================================================================
 function registerListeners(client) {
 
-  var isOkToSendMsg = true;
-
   // Triggered once joined.
-  // TODO use this to check if its sub only
   client.on("roomstate", function (channel, state) {
     STREAMERS_JOINED++;
-    isOkToSendMsg = !isOkToSendMsg;
-    // Dont spam the logs too much, send every other 2nd join event
-    if (isOkToSendMsg) {
+    // Dont spam the logs too much, send every now and then...
+    if (STREAMERS_JOINED % 10 === 0) {
       console.log("--------- Now joined " + STREAMERS_JOINED + " streamers!");
     }
     // Dont say anything in chat if its subs only.
@@ -196,9 +193,9 @@ function registerListeners(client) {
       if ((STREAMERS_JOINED < CHAT_LIMIT || SEND_EACH_TIME) && ALLOWED_TO_CHAT) {
           client.action(channel, msg).then(data =>{
           //Skip the data for now.
-          console.log("\nSent initial Matrix quote.");
+          console.log("Sent initial Matrix quote.");
           }).catch(err => {
-              console.log("FAILED TO SEND JOIN MSG!");
+              console.log("--------- FAILED TO SEND JOIN MSG!");
           });
       }
       // Avoid issues of spamming, overflow of failed responses etc..
@@ -206,9 +203,9 @@ function registerListeners(client) {
       else if ((STREAMERS_JOINED % 2 === 0 && STREAMERS_JOINED < CHAT_LIMIT * 2) && ALLOWED_TO_CHAT) {
           client.action(channel, msg).then(data =>{
           //Skip the data for now.
-          console.log("\nSent initial Matrix quote.");
+          console.log("Sent initial Matrix quote.");
           }).catch(err => {
-              console.log("FAILED TO SEND JOIN MSG!");
+              console.log("--------- FAILED TO SEND JOIN MSG!");
           });
       }
     } else {
@@ -449,8 +446,6 @@ async function populateStreamerArrays() {
       parsedFetchedArray(result, true);
       // Called once, then get the rest of the small channels
       randomlyPopulateSelectedStreamers();
-
-
       console.log("Starting sending request for the rest of small streamers:");
       // 100 streams took 3-5 mins
       // 1000 streams took 34 mins.
@@ -465,7 +460,7 @@ async function populateStreamerArrays() {
         // Skip a few we will get dublicates anyway according to the api
         startOffset += 100;
         if (i === Math.round(DO_STREAM_REQUEST_TIMES / 2)) {
-          console.log("--------- Halfway done getting smaller streamers...");
+          console.log("--------- Halfway done grabbing the smaller streamers...");
         }
       }
   } catch (error) {
@@ -626,5 +621,11 @@ function sendMsgToTheBotChannel(client, msg) {
   }
 
   function updateMsgLimits() {
-    TOP_100_STREAMERS > MANY_VIEWERS ? CHAT_LIMIT = CHAT_LIMIT * 2 : CHAT_LIMIT;
+    if (TOP_100_STREAMERS > MANY_VIEWERS) {
+      CHAT_LIMIT = CHAT_LIMIT * 3
+    }
+    else if (TOP_100_STREAMERS > FEW_VIEWERS) {
+      CHAT_LIMIT = CHAT_LIMIT * 2
+    }
+    // Else default value of CHAT_LIMIT
   }
