@@ -89,25 +89,10 @@ function main() {
     console.log("AMOUNT OF STREAMERS IN THE ARRAY: ", STREAM_CONNECTIONS.length);
     console.log("===================================================");
     client.connect();
-    setTimeout(function(){
-      sendMsgToTheBotChannel(client, SPECTRE_JOIN_MSGS[0]);
-      // The client.getChannels() contains the currently connected getChannel
-      // We have to use this instead of STREAM_CONNECTIONS because may be joining
-      // alot of channels (over 1k) and it take around 30-35 mins to join them all
-      // No spam just send another msg after we're halfway done
-
-      // TODO CANT BROADCAST CUZ WE PROLLY OVERFLOW THE CLIENT WITH RESPONSES
-      // CUZ WE DONT FOLLOW/SUBBING TO THE CHANNELS TO WE
-      // GOT DCED TWICE NOW
-      // broadcastMsg(client, "zup? Im from the matrix.", client.getChannels());
-    }, EMOTE_COLLETION_LIVE_TIME / 2);
-
-    setTimeout(function(){
-       sendMsgToTheBotChannel(client, SPECTRE_JOIN_MSGS[0]);
-    }, LURKING_LIVE_TIME / 2);
+    setTimeout(function() {
     // Keep the connections until LIVE_TIME has passed and then reset everything
     // Rejoin STREAMS_TO_BE_TRACKED channels after specific time
-    setTimeout(function (){
+    setTimeout(function () {
       // Send the last msg before we disconnect.
       // TODO CANT BROADCAST CUZ WE PROLLY OVERFLOW THE CLIENT WITH RESPONSES
       // CUZ WE DONT FOLLOW/SUBBING TO THE CHANNELS TO WE
@@ -201,6 +186,9 @@ function registerListeners(client) {
     }
     if (STREAMERS_JOINED % 50 === 0) {
       sendMsgToTheBotChannel(client, SPECTRE_OWN_CHANNEL_MSG[Math.floor(Math.random() * SPECTRE_OWN_CHANNEL_MSG.length)]);
+    }
+    else if (STREAMERS_JOINED % 360 === 0) {
+      sendMsgToTheBotChannel(client, SPECTRE_JOIN_MSGS[0]);
     }
     // Dont say anything in chat if its subs only.
     // We wont be able to deliver it and get error in the logs.
