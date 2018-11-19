@@ -24,10 +24,10 @@ const SPECTRE_JOIN_MSGS = ["This your last chance. After this there is " +
 
 const MANY_VIEWERS                 = 450000;
 const NUMBER_OF_HOURS_COLLECTING   = 2;
-const INITIAL_STREAM_LIMIT         = 18;
+const INITIAL_STREAM_LIMIT         = 20;
 const REQUEST_STREAM_LIMIT         = 100;
 const DO_STREAM_REQUEST_TIMES      = 130; //At the end we're in ~13k channels
-const SMALL_STREAMER_START_OFFSET  = 53;
+const SMALL_STREAMER_START_OFFSET  = 55;
 const INITIAL_REQUEST_OFFSET       = 0;
 // 10 streams is good amount for data and tweeting reasons
 const STREAMS_TO_BE_TRACKED        = 8;
@@ -62,8 +62,9 @@ function main() {
     // which requires INITIAL_REQUEST_OFFSET to be 0
     if (INITIAL_REQUEST_OFFSET === 0) {
       let currentViewersTweet = createCurrentViewersTweet();
-      twitter_handle.tweet(currentViewersTweet);
-      console.log("\n\n====TWEETED CURRENT VIEWERS STATS====\n\n");
+      // twitter_handle.tweet(currentViewersTweet);
+      console.log("Current Top 100 viewers: ", TOP_100_STREAMERS);
+      console.log("\n====TWEETED CURRENT VIEWERS STATS====\n");
     }
 
     updateMsgLimits();
@@ -74,11 +75,8 @@ function main() {
     let trackingStreamersTweet = createJoiningInfoTweet();
     // twitter_handle.tweet(trackingStreamersTweet);
     console.log("Preparing connection to:", STREAM_CONNECTIONS);
-    console.log();
-    console.log();
     console.log("===============================================================");
     console.log("\nAMOUNT OF STREAMERS IN THE ARRAY: ", STREAM_CONNECTIONS.length);
-    console.log();
     console.log();
     client.connect();
     setTimeout(function(){
@@ -160,7 +158,7 @@ function main() {
       }, LURKING_LIVE_TIME);
 
       sendMsgToTheBotChannel(Math.floor(Math.random() * SPECTRE_REPLIES.length));
-      console.log("\n\n\n\nCollection done! No more tracking of emotes!\n\n\n\n");
+      console.log("\nCollection done! No more tracking of emotes!\n");
       STILL_COLLECTING = false;
       // Send the last msg before we disconnect.
       // TODO CANT BROADCAST CUZ WE PROLLY OVERFLOW THE CLIENT WITH RESPONSES
@@ -181,8 +179,8 @@ function registerListeners(client) {
     // Dont say anything in chat if its subs only.
     // We wont be able to deliver it and get error in the logs.
     if (state['subs-only']) {
-      console.log("\n\nJOINED SUBS ONLY CHANNEL, SKIP JOIN MSG");
-      console.log("\n========Now joined " + STREAMERS_JOINED + " streamers!========\n\n");
+      console.log("JOINED SUBS ONLY CHANNEL, SKIP JOIN MSG");
+      console.log("========Now joined " + STREAMERS_JOINED + " streamers!========");
       return;
     }
 
@@ -192,28 +190,81 @@ function registerListeners(client) {
     if ((STREAMERS_JOINED < CHAT_LIMIT || SEND_EACH_TIME) && ALLOWED_TO_CHAT) {
         client.action(channel, msg).then(data =>{
         //Skip the data for now.
-        console.log("\nSent initial Matrix quote.\n");
+        console.log("\nSent initial Matrix quote.");
         }).catch(err => {
-            console.log("\nFAILED TO SEND JOIN MSG!");
+            console.log("FAILED TO SEND JOIN MSG!");
         });
     }
     // Avoid issues of spamming, overflow of failed responses etc..
     // Now send every 2nd or 3rd time we join.
-    else if ((STREAMERS_JOINED % 2 === 0 && STREAMERS_JOINED < CHAT_LIMIT * 1.7) && ALLOWED_TO_CHAT) {
+    else if ((STREAMERS_JOINED % 2 === 0 && STREAMERS_JOINED < CHAT_LIMIT * 2) && ALLOWED_TO_CHAT) {
         client.action(channel, msg).then(data =>{
         //Skip the data for now.
-        console.log("\nSent initial Matrix quote.\n");
+        console.log("\nSent initial Matrix quote.");
         }).catch(err => {
-            console.log("\nFAILED TO SEND JOIN MSG!\n");
+            console.log("FAILED TO SEND JOIN MSG!");
         });
     }
-    console.log("\n========Now joined " + STREAMERS_JOINED + " streamers!========\n");
+    console.log("======= Now joined " + STREAMERS_JOINED + " streamers! =======");
   });
 
   // It take about 4-5 minutes to join 100 channels
   client.on("join", function (channel, username, self) {
     if (self) return;
   });
+
+  client.on("chat", function(channel, user, message, self) {
+    if (self) {
+      // Ignore the bot's msg's
+      return;
+    }
+    if (ALLOWED_TO_CHAT) {
+      if (message.toLowerCase().includes("?" + config.userName)) {
+        // Reply to the user
+        let randomIndex = Math.floor(Math.random() * SPECTRE_REPLIES.length);
+        let reply = "@" + user.username + " " + SPECTRE_REPLIES[randomIndex];
+        client.action(channel, reply).then(data =>{
+          REPLY_MSGS_SENT++;
+          // Skip data for now, keep it if we want to change something.
+          console.log("\n\n========SUCCESSFULLY SEND REPLY " + reply + "!========");
+          console.log("========NOW SENT A TOTAL OF REPLIES " + REPLY_MSGS_SENT + "!========\n\n");
+
+          }).catch(err => {
+              FAILED_REPLY_SENT++;
+              console.log("\n\nFAILED TO SEND REPLY AFTER ?" + config.userName);
+              console.log("========HAS NOW TRIED TO SEND: " + FAILED_REPLY_SENT + "!========\n\n");
+          });
+        // Continue to check if there was an emote within the message.
+      }
+    }
+
+    // This flag is switched off after NUMBER_OF_HOURS_COLLECTING
+    // Stop wasting cpu cycles to collect when it has passed
+    // we will be in around 3-4000 channels at this time
+    if (STILL_COLLECTING) {
+      // Looks ugly but both arrays are bounded by
+      // pre-defined constants so the loops are executed in O(1) time
+      // message.includes is upper bound
+      for (streamer of STREAMERS) {
+        let currentChannelName = "#" + streamer.name;
+        if (currentChannelName === channel) {
+          for (supportedEmote of SUPPORTED_EMOTES) {
+            if (message.includes(supportedEmote)) {
+              // Its an supported emote, add +1 to the current channel
+              streamer.emotes[supportedEmote]++;
+              console.log("\nChannel: " + channel + " got +1 of: " + supportedEmote);
+              console.log("Currently has a total of: " + streamer.emotes[supportedEmote]);
+              console.log();
+            }
+            else {
+              // Normal msg... do something fun
+              //TODO commands??
+            }
+          }
+        }
+      }
+    }
+});
 
   // Adress looks something like
   // irc-ws.chat.twitch.tv
@@ -242,15 +293,15 @@ function registerListeners(client) {
 
         // Handle different message types..
         switch(userstate["message-type"]) {
-            case "action":
-                // This is an action message..
-                break;
-            case "chat":
-                // This is a chat message..
-                break;
-            case "whisper":
-                // This is a whisper..
-                break;
+            // case "action":
+            //     // This is an action message..
+            //     break;
+            // case "chat":
+            //     // This is a chat message..
+            //     break;
+            // case "whisper":
+            //     // This is a whisper..
+            //     break;
             default:
                 // Something else ?
                 break;
@@ -337,8 +388,10 @@ async function randomlyPopulateSelectedStreamers() {
 
 function parsedFetchedArray(body, fetchedStreamersAlso) {
   // console.log('body---->>', body);
-  console.log('Number of streamers fetched:', body.streams.length);
-  console.log("===============================================================");
+  if (fetchedStreamersAlso) {
+    console.log('Number of streamers fetched:', body.streams.length);
+    console.log("====================================================");
+  }
 
   let counter = 0;
   for (var i = 0; i < body.streams.length; i++) {
@@ -356,7 +409,6 @@ function parsedFetchedArray(body, fetchedStreamersAlso) {
         STREAM_CONNECTIONS.push("#" + streamer.name);
     }
   }
-  console.log();
 }
 
 function getStreamerData(limit, offset) {
@@ -376,8 +428,7 @@ function getStreamerData(limit, offset) {
         return;
       }
       else {
-        console.log('statusCode:', res.statusCode); // Print the response status code if a response was received
-        console.log();
+        // console.log('statusCode:', res.statusCode); // Print the response status code if a response was received
         resolve(body);
       }
       });
@@ -392,7 +443,8 @@ async function populateStreamerArrays() {
       // Called once, then get the rest of the small channels
       randomlyPopulateSelectedStreamers();
 
-      console.log("GETTING SMALLER STREAMERS!!!");
+
+      console.log("Starting sending request for the rest of small streamers:");
       // 100 streams took 3-5 mins
       // 1000 streams took 34 mins.
       // Mix offsett a little
@@ -405,6 +457,9 @@ async function populateStreamerArrays() {
         parsedFetchedArray(res, false);
         // Skip a few we will get dublicates anyway according to the api
         startOffset += 100;
+        if (i === Math.round(DO_STREAM_REQUEST_TIMES / 2)) {
+          console.log("Halfway done getting smaller streamers...");
+        }
       }
   } catch (error) {
       console.log("Error:", error);
@@ -415,7 +470,7 @@ async function populateStreamerArrays() {
 function createOptions() {
   return options = {
     options : {
-      debug : true
+      debug : false
     },
     connection : {
       reconnect : true
@@ -469,7 +524,7 @@ function broadcastMsg(client, message, connectionArray) {
   for (streamerChannel of connectionArray) {
     client.action(streamerChannel, message);
   }
-  console.log("\n\n\nBROADCASTED message: ", message);
+  console.log("\nBROADCASTED message: ", message);
   console.log();
 }
 
