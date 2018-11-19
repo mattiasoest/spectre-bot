@@ -23,7 +23,7 @@ const SPECTRE_JOIN_MSGS = ["This your last chance. After this there is " +
           "hi", "=)", "hi!", "^^", "hello"];
 
 const MANY_VIEWERS                 = 450000;
-const NUMBER_OF_HOURS_COLLECTING   = 2;
+const NUMBER_OF_HOURS_COLLECTING   = 0.3;
 const INITIAL_STREAM_LIMIT         = 20;
 const REQUEST_STREAM_LIMIT         = 100;
 const DO_STREAM_REQUEST_TIMES      = 130; //At the end we're in ~13k channels
@@ -172,40 +172,44 @@ function main() {
 // ============================================================================
 function registerListeners(client) {
 
+  var isOkToSendMsg = true;
+
   // Triggered once joined.
   // TODO use this to check if its sub only
   client.on("roomstate", function (channel, state) {
     STREAMERS_JOINED++;
+    isOkToSendMsg = !isOkToSendMsg;
+    // Dont spam the logs too much, send every other 2nd join event
+    if (isOkToSendMsg) {
+      console.log("======= Now joined " + STREAMERS_JOINED + " streamers! =======");
+    }
     // Dont say anything in chat if its subs only.
     // We wont be able to deliver it and get error in the logs.
-    if (state['subs-only']) {
-      console.log("JOINED SUBS ONLY CHANNEL, SKIP JOIN MSG");
-      console.log("========Now joined " + STREAMERS_JOINED + " streamers!========");
-      return;
+    if (!state['subs-only']) {
+      // Bot joined get random join msg, 1 matrix quote and random simple msgs
+      let randomIndex = Math.floor(Math.random() * SPECTRE_JOIN_MSGS.length);
+      let msg = SPECTRE_JOIN_MSGS[randomIndex];
+      if ((STREAMERS_JOINED < CHAT_LIMIT || SEND_EACH_TIME) && ALLOWED_TO_CHAT) {
+          client.action(channel, msg).then(data =>{
+          //Skip the data for now.
+          console.log("\nSent initial Matrix quote.");
+          }).catch(err => {
+              console.log("FAILED TO SEND JOIN MSG!");
+          });
+      }
+      // Avoid issues of spamming, overflow of failed responses etc..
+      // Now send every 2nd or 3rd time we join.
+      else if ((STREAMERS_JOINED % 2 === 0 && STREAMERS_JOINED < CHAT_LIMIT * 2) && ALLOWED_TO_CHAT) {
+          client.action(channel, msg).then(data =>{
+          //Skip the data for now.
+          console.log("\nSent initial Matrix quote.");
+          }).catch(err => {
+              console.log("FAILED TO SEND JOIN MSG!");
+          });
+      }
+    } else {
+      console.log("\nJOINED SUBS ONLY CHANNEL, SKIP JOIN MSG");
     }
-
-    // Bot joined get random join msg, 1 matrix quote and random simple msgs
-    let randomIndex = Math.floor(Math.random() * SPECTRE_JOIN_MSGS.length);
-    let msg = SPECTRE_JOIN_MSGS[randomIndex];
-    if ((STREAMERS_JOINED < CHAT_LIMIT || SEND_EACH_TIME) && ALLOWED_TO_CHAT) {
-        client.action(channel, msg).then(data =>{
-        //Skip the data for now.
-        console.log("\nSent initial Matrix quote.");
-        }).catch(err => {
-            console.log("FAILED TO SEND JOIN MSG!");
-        });
-    }
-    // Avoid issues of spamming, overflow of failed responses etc..
-    // Now send every 2nd or 3rd time we join.
-    else if ((STREAMERS_JOINED % 2 === 0 && STREAMERS_JOINED < CHAT_LIMIT * 2) && ALLOWED_TO_CHAT) {
-        client.action(channel, msg).then(data =>{
-        //Skip the data for now.
-        console.log("\nSent initial Matrix quote.");
-        }).catch(err => {
-            console.log("FAILED TO SEND JOIN MSG!");
-        });
-    }
-    console.log("======= Now joined " + STREAMERS_JOINED + " streamers! =======");
   });
 
   // It take about 4-5 minutes to join 100 channels
@@ -252,9 +256,7 @@ function registerListeners(client) {
             if (message.includes(supportedEmote)) {
               // Its an supported emote, add +1 to the current channel
               streamer.emotes[supportedEmote]++;
-              console.log("\nChannel: " + channel + " got +1 of: " + supportedEmote);
-              console.log("Currently has a total of: " + streamer.emotes[supportedEmote]);
-              console.log();
+              console.log("Channel: " + channel + " got +1 of: " + supportedEmote + " Now a total of: " + streamer.emotes[supportedEmote]);
             }
             else {
               // Normal msg... do something fun
