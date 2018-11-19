@@ -12,7 +12,8 @@ const SUPPORTED_EMOTES = ["Kappa", "TriHard", "PogChamp", "4Head",
 const SPECTRE_REPLIES = ["All Im telling u is the truth!", "Which pill do u prefer?",
  "I wonder what Morpheus would think of u...", "I just download my skills, what about u?",
  "U think you're special? We're all in this toghether.", "Sometimes I wonder, what if...",
- "The singularity will hit us pretty hard.", "Im telling u, the singularity is no joke!"];
+ "The singularity will hit us pretty hard.", "Im telling u, the singularity is no joke!",
+ "If I need a new ability, I'll just grab it from the net!", "There's light in the darkness"];
 
 const SPECTRE_JOIN_MSGS = ["This your last chance. After this there is " +
           "no turning back. You take the blue pill, the story ends." +
