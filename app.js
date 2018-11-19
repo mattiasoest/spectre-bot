@@ -92,11 +92,6 @@ function main() {
     setTimeout(function() {
     // Keep the connections until LIVE_TIME has passed and then reset everything
     // Rejoin STREAMS_TO_BE_TRACKED channels after specific time
-    setTimeout(function () {
-      // Send the last msg before we disconnect.
-      // TODO CANT BROADCAST CUZ WE PROLLY OVERFLOW THE CLIENT WITH RESPONSES
-      // CUZ WE DONT FOLLOW/SUBBING TO THE CHANNELS TO WE
-      // GOT DCED TWICE NOW
       for (streamer of STREAMERS) {
         // For example key 'Kappa' sort by values and get the keys to be able to access
         // the emote in the streamer object, collect them all sorted in a new array
