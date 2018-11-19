@@ -67,7 +67,7 @@ function main() {
       let viewersTweet = { status : currentViewersText };
       // twitter_handle.tweet(viewersTweet);
       console.log("Current Top 100 viewers: ", TOP_100_STREAMERS);
-      console.log("\n====TWEETED CURRENT VIEWERS STATS====\n");
+      console.log("\n============TWEETED CURRENT VIEWERS STATS============\n");
     }
 
     updateMsgLimits();
@@ -78,9 +78,9 @@ function main() {
     let trackingStreamersTweet = createJoiningInfoTweet();
     // twitter_handle.tweet(trackingStreamersTweet);
     console.log("Preparing connection to:", STREAM_CONNECTIONS);
-    console.log("===============================================================");
+    console.log("===================================================");
     console.log("AMOUNT OF STREAMERS IN THE ARRAY: ", STREAM_CONNECTIONS.length);
-    console.log("===============================================================");
+    console.log("===================================================");
     client.connect();
     setTimeout(function(){
       sendMsgToTheBotChannel(client, "Nothing happens here, check my https://twitter.com/" + config.userName + " to see where Im at...");
@@ -117,7 +117,7 @@ function main() {
           tweetText = createEphTweetText(streamer, emoteKeysSorted);
         }
         twitter_handle.tweetImage(streamer.logo, tweetText);
-        console.log("===============================================================");
+        console.log("===================================================");
         console.log(streamer.displayName);
         console.log("Collected: ");
         console.log(streamer.emotes);
@@ -379,16 +379,16 @@ async function randomlyPopulateSelectedStreamers() {
       // Only add the BIG streamers which we gonna track to the connection array
       // So STREAMS_TO_BE_TRACKED big channels and if it works 4-6k small channels
       STREAM_CONNECTIONS.push("#" + streamerData.name);
-      console.log("Randomly picked streamer:" , streamerData.name);
+      console.log("--------- Randomly picked streamer:", streamerData.name);
       var updatedStreamer =  await addAdditionalAttributes(streamerData);
       // Add just the name to the array used to connect
       STREAMERS.push(updatedStreamer);
-      console.log("PUSHED STREAMER DATA", updatedStreamer.displayName);
+      console.log("--------- Pushed streamer data:", updatedStreamer.displayName);
       console.log();
       requestedAmount--;
       }
       //Also add the bot himself in the beginning of the connections array
-      console.log("ADDING MYSELF TO STREAM_CONNECTIONS AT INDEX: " + STREAM_CONNECTIONS.length);
+      console.log("--------- ADDING MYSELF TO STREAM_CONNECTIONS AT INDEX: " + STREAM_CONNECTIONS.length);
       STREAM_CONNECTIONS.push("#" + config.userName);
       console.log();
 }
@@ -409,7 +409,7 @@ function parsedFetchedArray(body, fetchedStreamersAlso) {
       streamer.logoUrl = body.streams[i].channel.logo;
       streamer.url = body.streams[i].channel.url;
       streamer.viewers = body.streams[i].viewers;
-      console.log("Fetching streamer data from:", streamer.name);
+      console.log("--------- Fetching streamer data from:", streamer.name);
       FIRST_FETCHED_STREAMERS.push(streamer);
     }
     else {
@@ -465,7 +465,7 @@ async function populateStreamerArrays() {
         // Skip a few we will get dublicates anyway according to the api
         startOffset += 100;
         if (i === Math.round(DO_STREAM_REQUEST_TIMES / 2)) {
-          console.log("Halfway done getting smaller streamers...");
+          console.log("--------- Halfway done getting smaller streamers...");
         }
       }
   } catch (error) {
