@@ -33,8 +33,8 @@ const FEW_VIEWERS                  = 320000;
 const NUMBER_OF_HOURS_COLLECTING   = 1.75;
 const INITIAL_STREAM_LIMIT         = 12;
 const REQUEST_STREAM_LIMIT         = 100;
-const DO_STREAM_REQUEST_TIMES      = 130; //At the end we're in ~13k channels
-const SMALL_STREAMER_START_OFFSET  = 55;
+const DO_STREAM_REQUEST_TIMES      = 190;
+const SMALL_STREAMER_START_OFFSET  = 4000;
 const INITIAL_REQUEST_OFFSET       = 0;
 // 10 streams is good amount for data and tweeting reasons
 const STREAMS_TO_BE_TRACKED        = 5;
