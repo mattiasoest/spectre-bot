@@ -25,11 +25,11 @@ const SPECTRE_JOIN_MSGS = ["This your last chance. After this there is " +
           "hi", "=)", "hi!", "^^", "hello"];
 
 const SPECTRE_OWN_CHANNEL_MSG = ["Nothing happens here, check my https://twitter.com/" + config.userName + " to see where Im at...",
-          "?" + config.userName + "in the chat.", "Lurking in the shadows...", "MrDestructoid",
+          "?" + config.userName + " in the chat.", "Lurking in the shadows...", "MrDestructoid",
           "Hit the follow button to get higher #join priority among all the Twitch channels."]
 
-const MANY_VIEWERS                 = 5550000;
-const FEW_VIEWERS                  = 270000;
+const MANY_VIEWERS                 = 575000;
+const FEW_VIEWERS                  = 320000;
 const NUMBER_OF_HOURS_COLLECTING   = 1.75;
 const INITIAL_STREAM_LIMIT         = 12;
 const REQUEST_STREAM_LIMIT         = 100;
@@ -56,6 +56,7 @@ var STREAMERS               = [];
 var STILL_COLLECTING        = true;
 var SEND_EACH_TIME          = true;
 var MAIN_EXECUTIONS         = 0;
+
 // ============================================================================
 // Start the app
 main();
@@ -246,7 +247,6 @@ function registerListeners(client) {
         // Continue to check if there was an emote within the message.
       }
     }
-
     // This flag is switched off after NUMBER_OF_HOURS_COLLECTING
     // Stop wasting cpu cycles to collect when it has passed
     // we will be in around 3-4000 channels at this time
@@ -626,10 +626,10 @@ function sendMsgToTheBotChannel(client, msg) {
 
   function updateMsgLimits() {
     if (TOP_100_STREAMERS > MANY_VIEWERS) {
-      CHAT_LIMIT = CHAT_LIMIT * 3
+      CHAT_LIMIT = CHAT_LIMIT * 6
     }
     else if (TOP_100_STREAMERS > FEW_VIEWERS) {
-      CHAT_LIMIT = CHAT_LIMIT * 2
+      CHAT_LIMIT = CHAT_LIMIT * 2.75
     }
     // Else default value of CHAT_LIMIT
   }
