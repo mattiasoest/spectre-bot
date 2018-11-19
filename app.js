@@ -23,7 +23,7 @@ const SPECTRE_JOIN_MSGS = ["This your last chance. After this there is " +
           "hi", "=)", "hi!", "^^", "hello"];
 
 const MANY_VIEWERS                 = 450000;
-const NUMBER_OF_HOURS_COLLECTING   = 0.3;
+const NUMBER_OF_HOURS_COLLECTING   = 0.2;
 const INITIAL_STREAM_LIMIT         = 20;
 const REQUEST_STREAM_LIMIT         = 100;
 const DO_STREAM_REQUEST_TIMES      = 130; //At the end we're in ~13k channels
@@ -80,7 +80,7 @@ function main() {
     console.log();
     client.connect();
     setTimeout(function(){
-      sendMsgToTheBotChannel("Nothing happens here, check my https://twitter.com/" + config.userName + " to see where Im at...");
+      sendMsgToTheBotChannel(client, "Nothing happens here, check my https://twitter.com/" + config.userName + " to see where Im at...");
       // The client.getChannels() contains the currently connected getChannel
       // We have to use this instead of STREAM_CONNECTIONS because may be joining
       // alot of channels (over 1k) and it take around 30-35 mins to join them all
@@ -119,7 +119,7 @@ function main() {
         console.log("Collected: ");
         console.log(streamer.emotes);
         console.log();
-        sendMsgToTheBotChannel(tweetText);
+        sendMsgToTheBotChannel(client, tweetText);
       }
       // Stats has been tweeted, now chill in the streams for a bit
       // Hang around streams and idle before connection to new streamers
@@ -128,7 +128,7 @@ function main() {
       // We dont want to spam twitter too much anyway.
       // 2 more hours lurking
       setTimeout(function() {
-        sendMsgToTheBotChannel(Math.floor(Math.random() * SPECTRE_REPLIES.length));
+        sendMsgToTheBotChannel(client, Math.floor(Math.random() * SPECTRE_REPLIES.length));
         console.log("\nDISCONNECTING... PREPARING NEW CONNECTIONS!\n");
         // After successfull disconnect go back to top of main()
         client.disconnect().then(function () {
@@ -146,7 +146,7 @@ function main() {
           // Just wait a few seconds if we want to tweet or something to let all tweets get through
           // probably is enough with 1-2 sec but theres no rush.
           setTimeout(function() {
-            sendMsgToTheBotChannel(Math.floor(Math.random() * SPECTRE_REPLIES.length));
+            sendMsgToTheBotChannel(client, Math.floor(Math.random() * SPECTRE_REPLIES.length));
             // Use recursion back to the top
             main();
           }, 10000);
@@ -157,7 +157,7 @@ function main() {
 
       }, LURKING_LIVE_TIME);
 
-      sendMsgToTheBotChannel(Math.floor(Math.random() * SPECTRE_REPLIES.length));
+      sendMsgToTheBotChannel(client, Math.floor(Math.random() * SPECTRE_REPLIES.length));
       console.log("\nCollection done! No more tracking of emotes!\n");
       STILL_COLLECTING = false;
       // Send the last msg before we disconnect.
@@ -612,7 +612,7 @@ function createCurrentViewersTweet() {
 }
 
 //In case ppl lurks in the channel.
-function sendMsgToTheBotChannel(msg) {
+function sendMsgToTheBotChannel(client, msg) {
   client.action("#" + config.userName, msg).then(data =>{
     //Skip the data for now.
     console.log("\nSent msg in #" + config.userName + "\n");
