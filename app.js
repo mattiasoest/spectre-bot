@@ -22,21 +22,25 @@ const SPECTRE_JOIN_MSGS = ["This your last chance. After this there is " +
           "sup guys, what's going on here?", //Some random casual msgs to not get flagged for spam
           "hi", "=)", "hi!", "^^", "hello"];
 
+const SPECTRE_OWN_CHANNEL_MSG = ["Nothing happens here, check my https://twitter.com/" + config.userName + " to see where Im at...",
+          "?" + config.userName + "in the chat.", "Lurking in the shadows...", "MrDestructoid",
+          "Hit the follow button to get higher #join priority among all the Twitch channels."]
+
 const MANY_VIEWERS                 = 5550000;
 const FEW_VIEWERS                  = 270000;
-const NUMBER_OF_HOURS_COLLECTING   = 1.5;
-const INITIAL_STREAM_LIMIT         = 18;
+const NUMBER_OF_HOURS_COLLECTING   = 1.75;
+const INITIAL_STREAM_LIMIT         = 12;
 const REQUEST_STREAM_LIMIT         = 100;
 const DO_STREAM_REQUEST_TIMES      = 130; //At the end we're in ~13k channels
 const SMALL_STREAMER_START_OFFSET  = 55;
 const INITIAL_REQUEST_OFFSET       = 0;
 // 10 streams is good amount for data and tweeting reasons
-const STREAMS_TO_BE_TRACKED        = 8;
+const STREAMS_TO_BE_TRACKED        = 5;
 const EMOTE_COLLETION_LIVE_TIME    = 1000*60*60 * NUMBER_OF_HOURS_COLLECTING;
 // Just for expore to get ppl interested, lurking in streams with 1-20 viewers
 // Like who is this guy? and then clicks on the nickname, sees profile sees, sees twitter
 // Guerilla marketing without spamming
-const LURKING_LIVE_TIME            = 1000*60*60 * NUMBER_OF_HOURS_COLLECTING * 2;
+const LURKING_LIVE_TIME            = 1000*60*60 * NUMBER_OF_HOURS_COLLECTING * 3;
 const ALLOWED_TO_CHAT              = false;
 // =============NOT CONSTANTS=============================================================
 var CHAT_LIMIT              = 900; //Maye change during execution.
@@ -84,7 +88,7 @@ function main() {
     console.log("===================================================");
     client.connect();
     setTimeout(function(){
-      sendMsgToTheBotChannel(client, "Nothing happens here, check my https://twitter.com/" + config.userName + " to see where Im at...");
+      sendMsgToTheBotChannel(client, SPECTRE_JOIN_MSGS[0]);
       // The client.getChannels() contains the currently connected getChannel
       // We have to use this instead of STREAM_CONNECTIONS because may be joining
       // alot of channels (over 1k) and it take around 30-35 mins to join them all
@@ -97,7 +101,7 @@ function main() {
     }, EMOTE_COLLETION_LIVE_TIME / 2);
 
     setTimeout(function(){
-      sendMsgToTheBotChannel(client, "Lurking in the shadows...");
+       sendMsgToTheBotChannel(client, SPECTRE_JOIN_MSGS[0]);
     }, LURKING_LIVE_TIME / 2);
     // Keep the connections until LIVE_TIME has passed and then reset everything
     // Rejoin STREAMS_TO_BE_TRACKED channels after specific time
@@ -135,7 +139,7 @@ function main() {
       // We dont want to spam twitter too much anyway.
       // 2 more hours lurking
       setTimeout(function() {
-        sendMsgToTheBotChannel(client, SPECTRE_REPLIES[Math.floor(Math.random() * SPECTRE_REPLIES.length)]);
+        sendMsgToTheBotChannel(client, SPECTRE_JOIN_MSGS[0]);
         console.log("\nDISCONNECTING... PREPARING NEW CONNECTIONS!\n");
         // After successfull disconnect go back to top of main()
         client.disconnect().then(function () {
@@ -153,7 +157,7 @@ function main() {
           // Just wait a few seconds if we want to tweet or something to let all tweets get through
           // probably is enough with 1-2 sec but theres no rush.
           setTimeout(function() {
-            sendMsgToTheBotChannel(client, "Type ?" + config.userName + "in chat.");
+            sendMsgToTheBotChannel(client, "Preparing to join new random channels shortly...");
             // Keep track of how many times the bot has executed the code.
             MAIN_EXECUTIONS++;
             // Use recursion back to the top
@@ -166,7 +170,7 @@ function main() {
 
       }, LURKING_LIVE_TIME);
 
-      sendMsgToTheBotChannel(client, SPECTRE_REPLIES[Math.floor(Math.random() * SPECTRE_REPLIES.length)]);
+      sendMsgToTheBotChannel(client, SPECTRE_JOIN_MSGS[0]);
       console.log("\nCollection done! No more tracking of emotes!\n");
       STILL_COLLECTING = false;
       // Send the last msg before we disconnect.
@@ -187,6 +191,14 @@ function registerListeners(client) {
     // Dont spam the logs too much, send every now and then...
     if (STREAMERS_JOINED % 10 === 0) {
       console.log("--------- Now joined " + STREAMERS_JOINED + " streamers!");
+    }
+    // Log every 100th channel to have some info who we
+    // join during the later stages
+    if (STREAMERS_JOINED % 100 === 0) {
+      console.log("--------- Joined channel: " + channel);
+    }
+    if (STREAMERS_JOINED % 50 === 0) {
+      sendMsgToTheBotChannel(client, SPECTRE_OWN_CHANNEL_MSG[Math.floor(Math.random() * SPECTRE_OWN_CHANNEL_MSG.length)]);
     }
     // Dont say anything in chat if its subs only.
     // We wont be able to deliver it and get error in the logs.
@@ -389,9 +401,6 @@ async function randomlyPopulateSelectedStreamers() {
       console.log();
       requestedAmount--;
       }
-      //Also add the bot himself in the beginning of the connections array
-      console.log("--------- ADDING MYSELF TO STREAM_CONNECTIONS AT INDEX: " + STREAM_CONNECTIONS.length);
-      STREAM_CONNECTIONS.push("#" + config.userName);
       console.log();
 }
 
@@ -446,6 +455,9 @@ function getStreamerData(limit, offset) {
 
 async function populateStreamerArrays() {
   try {
+      //Also add the bot himself in the beginning of the connections array
+      console.log("--------- ADDING MYSELF TO STREAM_CONNECTIONS AT INDEX: " + STREAM_CONNECTIONS.length);
+      STREAM_CONNECTIONS.push("#" + config.userName);
       //  Use offset 0 to get the INITIAL_REQUEST_STREAM_LIMIT TOP channels
       let result = await getStreamerData(REQUEST_STREAM_LIMIT, INITIAL_REQUEST_OFFSET);
       parsedFetchedArray(result, true);
