@@ -231,7 +231,7 @@ function registerListeners(client) {
 
   // It take about 4-5 minutes to join 100 channels
   client.on("join", function (channel, username, self) {
-    if (self) return;
+    if (self) sendMsgToTheBotChannel(client, TOP_100_STREAMERS);
   });
 
   client.on("chat", function(channel, user, message, self) {
