@@ -24,8 +24,8 @@ const SPECTRE_JOIN_MSGS = ["This your last chance. After this there is " +
 
 const MANY_VIEWERS                 = 5550000;
 const FEW_VIEWERS                  = 270000;
-const NUMBER_OF_HOURS_COLLECTING   = 0.5;
-const INITIAL_STREAM_LIMIT         = 20;
+const NUMBER_OF_HOURS_COLLECTING   = 1.5;
+const INITIAL_STREAM_LIMIT         = 18;
 const REQUEST_STREAM_LIMIT         = 100;
 const DO_STREAM_REQUEST_TIMES      = 130; //At the end we're in ~13k channels
 const SMALL_STREAMER_START_OFFSET  = 55;
@@ -66,7 +66,7 @@ function main() {
     if (INITIAL_REQUEST_OFFSET === 0) {
       let currentViewersText = createCurrentViewersText();
       let viewersTweet = { status : currentViewersText };
-      // twitter_handle.tweet(viewersTweet);
+      twitter_handle.tweet(viewersTweet);
       console.log("Current Top 100 viewers: ", TOP_100_STREAMERS);
       console.log("\n============TWEETED CURRENT VIEWERS STATS============\n");
     }
@@ -77,7 +77,7 @@ function main() {
     registerListeners(client);
 
     let trackingStreamersTweet = createJoiningInfoTweet();
-    // twitter_handle.tweet(trackingStreamersTweet);
+    twitter_handle.tweet(trackingStreamersTweet);
     console.log("Preparing connection to:", STREAM_CONNECTIONS);
     console.log("===================================================");
     console.log("AMOUNT OF STREAMERS IN THE ARRAY: ", STREAM_CONNECTIONS.length);
@@ -227,7 +227,8 @@ function registerListeners(client) {
       // Ignore the bot's msg's
       return;
     }
-    if (ALLOWED_TO_CHAT) {
+    // TODO adjust later to ALLOWED_TO_CHAT
+    if (true) {
       if (message.toLowerCase().includes("?" + config.userName)) {
         // Reply to the user
         let randomIndex = Math.floor(Math.random() * SPECTRE_REPLIES.length);
