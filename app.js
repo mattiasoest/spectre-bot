@@ -23,7 +23,7 @@ const SPECTRE_JOIN_MSGS = ["This your last chance. After this there is " +
           "hi", "=)", "hi!", "^^", "hello"];
 
 const MANY_VIEWERS                 = 450000;
-const NUMBER_OF_HOURS_COLLECTING   = 0.2;
+const NUMBER_OF_HOURS_COLLECTING   = 0.5;
 const INITIAL_STREAM_LIMIT         = 20;
 const REQUEST_STREAM_LIMIT         = 100;
 const DO_STREAM_REQUEST_TIMES      = 130; //At the end we're in ~13k channels
@@ -35,7 +35,7 @@ const EMOTE_COLLETION_LIVE_TIME    = 1000*60*60 * NUMBER_OF_HOURS_COLLECTING;
 // Just for expore to get ppl interested, lurking in streams with 1-20 viewers
 // Like who is this guy? and then clicks on the nickname, sees profile sees, sees twitter
 // Guerilla marketing without spamming
-const LURKING_LIVE_TIME            = 1000*60*60 * NUMBER_OF_HOURS_COLLECTING * 2.75;
+const LURKING_LIVE_TIME            = 1000*60*60 * NUMBER_OF_HOURS_COLLECTING * 2;
 const ALLOWED_TO_CHAT              = false;
 // =============NOT CONSTANTS=============================================================
 var CHAT_LIMIT              = 900; //Maye change during execution.
@@ -48,6 +48,7 @@ var STREAM_CONNECTIONS      = [];
 var STREAMERS               = [];
 var STILL_COLLECTING        = true;
 var SEND_EACH_TIME          = true;
+var MAIN_EXECUTIONS         = 0;
 // ============================================================================
 // Start the app
 main();
@@ -55,14 +56,16 @@ main();
 
 // Implementation
 function main() {
+  console.log("======= Starting main() execution number: " + MAIN_EXECUTIONS + " =======");
   populateStreamerArrays().then(function () {
     // If the offset is 0 then we requesting the top channels
     // If mistakes r made during testing dont tweet out bad stats
     // This tweet is based on  calculations based on the top 100 streamers
     // which requires INITIAL_REQUEST_OFFSET to be 0
     if (INITIAL_REQUEST_OFFSET === 0) {
-      let currentViewersTweet = createCurrentViewersTweet();
-      // twitter_handle.tweet(currentViewersTweet);
+      let currentViewersText = createCurrentViewersText();
+      let viewersTweet = { status : currentViewersText };
+      // twitter_handle.tweet(viewersTweet);
       console.log("Current Top 100 viewers: ", TOP_100_STREAMERS);
       console.log("\n====TWEETED CURRENT VIEWERS STATS====\n");
     }
@@ -76,8 +79,8 @@ function main() {
     // twitter_handle.tweet(trackingStreamersTweet);
     console.log("Preparing connection to:", STREAM_CONNECTIONS);
     console.log("===============================================================");
-    console.log("\nAMOUNT OF STREAMERS IN THE ARRAY: ", STREAM_CONNECTIONS.length);
-    console.log();
+    console.log("AMOUNT OF STREAMERS IN THE ARRAY: ", STREAM_CONNECTIONS.length);
+    console.log("===============================================================");
     client.connect();
     setTimeout(function(){
       sendMsgToTheBotChannel(client, "Nothing happens here, check my https://twitter.com/" + config.userName + " to see where Im at...");
@@ -118,7 +121,6 @@ function main() {
         console.log(streamer.displayName);
         console.log("Collected: ");
         console.log(streamer.emotes);
-        console.log();
         sendMsgToTheBotChannel(client, tweetText);
       }
       // Stats has been tweeted, now chill in the streams for a bit
@@ -147,6 +149,8 @@ function main() {
           // probably is enough with 1-2 sec but theres no rush.
           setTimeout(function() {
             sendMsgToTheBotChannel(client, Math.floor(Math.random() * SPECTRE_REPLIES.length));
+            // Keep track of how many times the bot has executed the code.
+            MAIN_EXECUTIONS++;
             // Use recursion back to the top
             main();
           }, 10000);
@@ -181,7 +185,7 @@ function registerListeners(client) {
     isOkToSendMsg = !isOkToSendMsg;
     // Dont spam the logs too much, send every other 2nd join event
     if (isOkToSendMsg) {
-      console.log("======= Now joined " + STREAMERS_JOINED + " streamers! =======");
+      console.log("--------- Now joined " + STREAMERS_JOINED + " streamers!");
     }
     // Dont say anything in chat if its subs only.
     // We wont be able to deliver it and get error in the logs.
@@ -208,7 +212,7 @@ function registerListeners(client) {
           });
       }
     } else {
-      console.log("\nJOINED SUBS ONLY CHANNEL, SKIP JOIN MSG");
+      console.log("JOINED SUBS ONLY CHANNEL, SKIP JOIN MSG");
     }
   });
 
@@ -384,6 +388,7 @@ async function randomlyPopulateSelectedStreamers() {
       requestedAmount--;
       }
       //Also add the bot himself in the beginning of the connections array
+      console.log("ADDING MYSELF TO STREAM_CONNECTIONS AT INDEX: " + STREAM_CONNECTIONS.length);
       STREAM_CONNECTIONS.push("#" + config.userName);
       console.log();
 }
@@ -392,7 +397,7 @@ function parsedFetchedArray(body, fetchedStreamersAlso) {
   // console.log('body---->>', body);
   if (fetchedStreamersAlso) {
     console.log('Number of streamers fetched:', body.streams.length);
-    console.log("====================================================");
+    console.log("===================================================");
   }
 
   let counter = 0;
@@ -557,7 +562,6 @@ function createEphTweetText(streamer, emoteKeys) {
 }
 
 function createJoiningInfoTweet() {
-
     // Local helper function
     let createMsg = function(streamsArray) {
       let msg = "";
@@ -585,7 +589,7 @@ function createJoiningInfoTweet() {
   }
 }
 
-function createCurrentViewersTweet() {
+function createCurrentViewersText() {
   let top_25 = 0;
   let top_50 = 0;
   let top_100 = 0;
@@ -604,20 +608,20 @@ function createCurrentViewersTweet() {
     }
   }
   TOP_100_STREAMERS = top_100;
-  return tweet = { status : "Viewers currently @ https://www.twitch.tv/ \n" +
+  return "Viewers currently @ https://www.twitch.tv/ \n" +
   "#top100 channels has a total of: " + top_100 + " viewers\n" +
   "where the #top50 channels has a total of: " + top_50 + " viewers\n" +
   "and the #top25 channels has a total of: " + top_25 + " viewers.\n" +
-  "A good time to be lurking on the shadows..."};
+  "A good time to be lurking on the shadows...";
 }
 
 //In case ppl lurks in the channel.
 function sendMsgToTheBotChannel(client, msg) {
   client.action("#" + config.userName, msg).then(data =>{
     //Skip the data for now.
-    console.log("\nSent msg in #" + config.userName + "\n");
+    console.log("Sent msg in #" + config.userName);
     }).catch(err => {
-        console.log("\nFAILED to sen msg in #" + config.userName + "!\n");
+        console.log("FAILED to sen msg in #" + config.userName + "!");
     });
   }
 
