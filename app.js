@@ -252,13 +252,13 @@ function registerListeners(client) {
         client.action(channel, reply).then(data =>{
           REPLY_MSGS_SENT++;
           // Skip data for now, keep it if we want to change something.
-          console.log("\n\n========SUCCESSFULLY SEND REPLY " + reply + "!========");
-          console.log("========NOW SENT A TOTAL OF REPLIES " + REPLY_MSGS_SENT + "!========\n\n");
+          console.log("========SUCCESSFULLY SEND REPLY " + reply + "!========");
+          console.log("========NOW SENT A TOTAL OF REPLIES " + REPLY_MSGS_SENT + "!========");
 
           }).catch(err => {
               FAILED_REPLY_SENT++;
-              console.log("\n\nFAILED TO SEND REPLY AFTER ?" + config.userName);
-              console.log("========HAS NOW TRIED TO SEND: " + FAILED_REPLY_SENT + "!========\n\n");
+              console.log("FAILED TO SEND REPLY AFTER ?" + config.userName);
+              console.log("========HAS NOW TRIED TO SEND: " + FAILED_REPLY_SENT + "!========");
           });
         // Continue to check if there was an emote within the message.
       }
