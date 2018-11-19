@@ -237,7 +237,9 @@ function registerListeners(client) {
   });
 
   client.on("chat", function(channel, user, message, self) {
-    if (self) {
+    // For some reason the self didnt work when I interested
+    // Add additional check
+    if (self || user.username === config.userName) {
       // Ignore the bot's msg's
       return;
     }
