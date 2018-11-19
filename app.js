@@ -95,6 +95,10 @@ function main() {
       // GOT DCED TWICE NOW
       // broadcastMsg(client, "zup? Im from the matrix.", client.getChannels());
     }, EMOTE_COLLETION_LIVE_TIME / 2);
+
+    setTimeout(function(){
+      sendMsgToTheBotChannel(client, "Lurking in the shadows...");
+    }, LURKING_LIVE_TIME / 2);
     // Keep the connections until LIVE_TIME has passed and then reset everything
     // Rejoin STREAMS_TO_BE_TRACKED channels after specific time
     setTimeout(function (){
