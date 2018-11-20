@@ -30,11 +30,10 @@ const SPECTRE_OWN_CHANNEL_MSG = ["Nothing happens here, check my https://twitter
 
 const MANY_VIEWERS                 = 575000;
 const FEW_VIEWERS                  = 320000;
-const NUMBER_OF_HOURS_COLLECTING   = 1.75;
+const NUMBER_OF_HOURS_COLLECTING   = 2;
 const INITIAL_STREAM_LIMIT         = 12;
 const REQUEST_STREAM_LIMIT         = 100;
-const DO_STREAM_REQUEST_TIMES      = 190;
-const SMALL_STREAMER_START_OFFSET  = 4000;
+const SMALL_STREAMER_START_OFFSET  = 12000;
 const INITIAL_REQUEST_OFFSET       = 0;
 // 10 streams is good amount for data and tweeting reasons
 const STREAMS_TO_BE_TRACKED        = 5;
@@ -42,8 +41,8 @@ const EMOTE_COLLETION_LIVE_TIME    = 1000*60*60 * NUMBER_OF_HOURS_COLLECTING;
 // Just for expore to get ppl interested, lurking in streams with 1-20 viewers
 // Like who is this guy? and then clicks on the nickname, sees profile sees, sees twitter
 // Guerilla marketing without spamming
-const LURKING_LIVE_TIME            = 1000*60*60 * NUMBER_OF_HOURS_COLLECTING * 3;
-const ALLOWED_TO_CHAT              = false;
+const LURKING_LIVE_TIME            = 1000*60*60 * NUMBER_OF_HOURS_COLLECTING * 1.75;
+const ALLOWED_TO_CHAT_PUBLICLY     = false;
 // =============NOT CONSTANTS=============================================================
 var CHAT_LIMIT              = 900; //Maye change during execution.
 var TOP_100_STREAMERS       = 0;
@@ -56,6 +55,7 @@ var STREAMERS               = [];
 var STILL_COLLECTING        = true;
 var SEND_EACH_TIME          = true;
 var MAIN_EXECUTIONS         = 0;
+var CURRENT_LIVE_CHANNELS   = 0;
 
 // ============================================================================
 // Start the app
@@ -192,7 +192,7 @@ function registerListeners(client) {
       // Bot joined get random join msg, 1 matrix quote and random simple msgs
       let randomIndex = Math.floor(Math.random() * SPECTRE_JOIN_MSGS.length);
       let msg = SPECTRE_JOIN_MSGS[randomIndex];
-      if ((STREAMERS_JOINED < CHAT_LIMIT || SEND_EACH_TIME) && ALLOWED_TO_CHAT) {
+      if ((STREAMERS_JOINED < CHAT_LIMIT || SEND_EACH_TIME) && ALLOWED_TO_CHAT_PUBLICLY) {
           client.action(channel, msg).then(data =>{
           //Skip the data for now.
           console.log("Sent initial Matrix quote.");
@@ -202,7 +202,7 @@ function registerListeners(client) {
       }
       // Avoid issues of spamming, overflow of failed responses etc..
       // Now send every 2nd or 3rd time we join.
-      else if ((STREAMERS_JOINED % 2 === 0 && STREAMERS_JOINED < CHAT_LIMIT * 2) && ALLOWED_TO_CHAT) {
+      else if ((STREAMERS_JOINED % 2 === 0 && STREAMERS_JOINED < CHAT_LIMIT * 2) && ALLOWED_TO_CHAT_PUBLICLY) {
           client.action(channel, msg).then(data =>{
           //Skip the data for now.
           console.log("Sent initial Matrix quote.");
@@ -227,25 +227,22 @@ function registerListeners(client) {
       // Ignore the bot's msg's
       return;
     }
-    // TODO adjust later to ALLOWED_TO_CHAT
-    if (true) {
-      if (message.toLowerCase().includes("?" + config.userName)) {
-        // Reply to the user
-        let randomIndex = Math.floor(Math.random() * SPECTRE_REPLIES.length);
-        let reply = "@" + user.username + " " + SPECTRE_REPLIES[randomIndex];
-        client.action(channel, reply).then(data =>{
-          REPLY_MSGS_SENT++;
-          // Skip data for now, keep it if we want to change something.
-          console.log("========SUCCESSFULLY SEND REPLY " + reply + "!========");
-          console.log("========NOW SENT A TOTAL OF REPLIES " + REPLY_MSGS_SENT + "!========");
+    if (message.toLowerCase().includes("?" + config.userName)) {
+      // Reply to the user
+      let randomIndex = Math.floor(Math.random() * SPECTRE_REPLIES.length);
+      let reply = "@" + user.username + " " + SPECTRE_REPLIES[randomIndex];
+      client.action(channel, reply).then(data =>{
+        REPLY_MSGS_SENT++;
+        // Skip data for now, keep it if we want to change something.
+        console.log("========SUCCESSFULLY SEND REPLY " + reply + "!========");
+        console.log("========NOW SENT A TOTAL OF REPLIES " + REPLY_MSGS_SENT + "!========");
 
-          }).catch(err => {
-              FAILED_REPLY_SENT++;
-              console.log("FAILED TO SEND REPLY AFTER ?" + config.userName);
-              console.log("========HAS NOW TRIED TO SEND: " + FAILED_REPLY_SENT + "!========");
-          });
-        // Continue to check if there was an emote within the message.
-      }
+        }).catch(err => {
+            FAILED_REPLY_SENT++;
+            console.log("FAILED TO SEND REPLY AFTER ?" + config.userName);
+            console.log("========HAS NOW TRIED TO SEND: " + FAILED_REPLY_SENT + "!========");
+        });
+      // Continue to check if there was an emote within the message.
     }
     // This flag is switched off after NUMBER_OF_HOURS_COLLECTING
     // Stop wasting cpu cycles to collect when it has passed
@@ -391,9 +388,10 @@ async function randomlyPopulateSelectedStreamers() {
       console.log();
 }
 
-function parsedFetchedArray(body, fetchedStreamersAlso) {
+function parsedFetchedArray(body, firstFetch) {
   // console.log('body---->>', body);
-  if (fetchedStreamersAlso) {
+  if (firstFetch) {
+    CURRENT_LIVE_CHANNELS = body._total;
     console.log('Number of streamers fetched:', body.streams.length);
     console.log("===================================================");
   }
@@ -402,7 +400,7 @@ function parsedFetchedArray(body, fetchedStreamersAlso) {
   for (var i = 0; i < body.streams.length; i++) {
     var streamer = {};
     streamer.name = body.streams[i].channel.name;
-    if (fetchedStreamersAlso) {
+    if (firstFetch) {
       streamer.displayName = body.streams[i].channel.display_name;
       streamer.logoUrl = body.streams[i].channel.logo;
       streamer.url = body.streams[i].channel.url;
@@ -450,20 +448,20 @@ async function populateStreamerArrays() {
       parsedFetchedArray(result, true);
       // Called once, then get the rest of the small channels
       randomlyPopulateSelectedStreamers();
-      console.log("Starting sending request for the rest of small streamers:");
       // 100 streams took 3-5 mins
       // 1000 streams took 34 mins.
       // Mix offsett a little
       // These small channels will proably go on and offline so get ALOT of them
-      let startOffset = SMALL_STREAMER_START_OFFSET;
-      // Start from 1 since we already made the main request for the
-      // larger streamers
-      for (let i = 1; i < DO_STREAM_REQUEST_TIMES; i++) {
-        let res = await getStreamerData(REQUEST_STREAM_LIMIT, startOffset);
+      let offset = getOffset();
+      let requestAmount = getAmountOfRequests(offset);
+      console.log("--------- Offset set to: " + offset);
+      console.log("--------- RequestAmount set to: " + requestAmount);
+      console.log("Starting sending requests for the rest of small streamers...");
+      for (let i = 1; i < requestAmount; i++) {
+        let res = await getStreamerData(REQUEST_STREAM_LIMIT, offset);
         parsedFetchedArray(res, false);
-        // Skip a few we will get dublicates anyway according to the api
-        startOffset += 100;
-        if (i === Math.round(DO_STREAM_REQUEST_TIMES / 2)) {
+        offset -= 100;
+        if (i === Math.round(requestAmount / 2)) {
           console.log("--------- Halfway done grabbing the smaller streamers...");
         }
       }
@@ -632,4 +630,16 @@ function sendMsgToTheBotChannel(client, msg) {
       CHAT_LIMIT = CHAT_LIMIT * 2.75
     }
     // Else default value of CHAT_LIMIT
+  }
+
+  function getOffset() {
+    // Get the low pop, if we cut the array like this we get the ones
+    // with atleast 1 viewers, easy exposure
+    return Math.floor(CURRENT_LIVE_CHANNELS * 0.65);
+  }
+
+  function getAmountOfRequests(offset) {
+    // Just we just want to make sure we're not sending a bad requests
+    let tmp = offset / 100;
+    return Math.floor(tmp - tmp * 0.1);
   }
