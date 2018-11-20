@@ -180,10 +180,10 @@ function registerListeners(client) {
     if (STREAMERS_JOINED % 100 === 0) {
       console.log("--------- Joined channel: " + channel);
     }
-    if (STREAMERS_JOINED % 100 === 0) {
+    if (STREAMERS_JOINED % 80 === 0) {
       sendMsgToTheBotChannel(client, SPECTRE_OWN_CHANNEL_MSG[Math.floor(Math.random() * SPECTRE_OWN_CHANNEL_MSG.length)]);
     }
-    else if (STREAMERS_JOINED % 460 === 0) {
+    else if (STREAMERS_JOINED % 400 === 0) {
       sendMsgToTheBotChannel(client, SPECTRE_JOIN_MSGS[0]);
     }
     // Dont say anything in chat if its subs only.
