@@ -25,12 +25,11 @@ const SPECTRE_JOIN_MSGS = ["This your last chance. After this there is " +
           "hi", "=)", "hi!", "^^", "hello"];
 
 const SPECTRE_OWN_CHANNEL_MSG = ["Nothing happens here, check my https://twitter.com/" + config.userName + " to see where Im at...",
-          "?" + config.userName + " in the chat.", "Lurking in the shadows...", "MrDestructoid",
-          "Hit the follow button to get higher #join priority among all the Twitch channels."]
+          "?" + config.userName + " in the chat.", "Lurking in the shadows...", "MrDestructoid"]
 
 const MANY_VIEWERS                 = 575000;
 const FEW_VIEWERS                  = 320000;
-const NUMBER_OF_HOURS_COLLECTING   = 2;
+const NUMBER_OF_HOURS_COLLECTING   = 1.85;
 const INITIAL_STREAM_LIMIT         = 12;
 const REQUEST_STREAM_LIMIT         = 100;
 const SMALL_STREAMER_START_OFFSET  = 12000;
