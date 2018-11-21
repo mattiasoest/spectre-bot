@@ -139,7 +139,6 @@ function main() {
           // probably is enough with 1-2 sec but theres no rush.
           setTimeout(function() {
             let msg = "Preparing to join some new random channels, stay tuned!";
-            sendMsgToTheBotChannel(client, msg);
             twitter_handle.tweet({status : msg});
             // Keep track of how many times the bot has executed the code.
             MAIN_EXECUTIONS++;
