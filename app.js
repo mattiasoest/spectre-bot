@@ -309,7 +309,7 @@ function registerListeners(client) {
             // default:
                 // Something else ?
                 // break;
-        }
+        // }
     });
 
   // JUST ADD THERE EVENTS SO THE BOT IS PREPARED AND DONT GET UGLY ERRORS IN THE LOG

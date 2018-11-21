@@ -2,7 +2,7 @@ const Twit   = require("twit");
 const config = require("./live_config");
 // const config = require("./consts");
 
-var T = new Twit({
+var twit = new Twit({
   consumer_key:         config.twitter_consumer_key,
   consumer_secret:      config.twitter_consumer_secret,
   access_token:         config.twitter_access_token,
@@ -19,7 +19,7 @@ exports.tweet = function(tweet) {
 
 // MAX CHARS PER TWEET 280 + IMAGE
 exports.tweetImage = function(b64Image, imageText) {
-    T.post('media/upload', { media_data: b64Image }, (err, data, res) => {
+    twit.post('media/upload', { media_data: b64Image }, (err, data, res) => {
       if (err) {
         console.log("ERROR POSTING TWEET:", err);
       }
@@ -34,7 +34,7 @@ exports.tweetImage = function(b64Image, imageText) {
 }
 
 function tweetHelper(tweet) {
-    T.post('statuses/update', tweet, (err, data, res) => {
+    twit.post('statuses/update', tweet, (err, data, res) => {
       if (err) {
         console.log("ERROR POSTING TWEET:", err);
       }
