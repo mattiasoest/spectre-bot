@@ -29,7 +29,7 @@ const SPECTRE_OWN_CHANNEL_MSG = ["Nothing happens here, check my https://twitter
 
 const MANY_VIEWERS                 = 575000;
 const FEW_VIEWERS                  = 320000;
-const NUMBER_OF_HOURS_COLLECTING   = 1.85;
+const NUMBER_OF_HOURS_COLLECTING   = 1.8;
 const INITIAL_STREAM_LIMIT         = 12;
 const REQUEST_STREAM_LIMIT         = 100;
 const SMALL_STREAMER_START_OFFSET  = 12000;
@@ -76,12 +76,10 @@ function main() {
       console.log("Current Top 100 viewers: ", TOP_100_STREAMERS);
       console.log("\n============TWEETED CURRENT VIEWERS STATS============\n");
     }
-
     updateMsgLimits();
     var options = createOptions();
     var client = new tmi.client(options);
     registerListeners(client);
-
     let trackingStreamersTweet = createJoiningInfoTweet();
     twitter_handle.tweet(trackingStreamersTweet);
     console.log("Preparing connection to:", STREAM_CONNECTIONS);
@@ -89,6 +87,7 @@ function main() {
     console.log("AMOUNT OF STREAMERS IN THE ARRAY: ", STREAM_CONNECTIONS.length);
     console.log("===================================================");
     client.connect();
+
     setTimeout(function() {
     // Keep the connections until LIVE_TIME has passed and then reset everything
     // Rejoin STREAMS_TO_BE_TRACKED channels after specific time
@@ -294,10 +293,10 @@ function registerListeners(client) {
     // TODO CHECK THIS TOMMORROW TO CATCH ALL
     client.on("message", function (channel, userstate, message, self) {
         // Don't listen to my own messages..
-        if (self) return;
+        // if (self) return;
 
         // Handle different message types..
-        switch(userstate["message-type"]) {
+        // switch(userstate["message-type"]) {
             // case "action":
             //     // This is an action message..
             //     break;
@@ -307,9 +306,9 @@ function registerListeners(client) {
             // case "whisper":
             //     // This is a whisper..
             //     break;
-            default:
+            // default:
                 // Something else ?
-                break;
+                // break;
         }
     });
 
