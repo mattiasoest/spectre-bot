@@ -139,12 +139,14 @@ function main() {
           // Just wait a few seconds if we want to tweet or something to let all tweets get through
           // probably is enough with 1-2 sec but theres no rush.
           setTimeout(function() {
-            sendMsgToTheBotChannel(client, "Preparing to join new random channels shortly...");
+            let msg = "Preparing to join some new random channels, stay tuned!";
+            sendMsgToTheBotChannel(client, msg);
+            twitter_handle.tweet({status : msg});
             // Keep track of how many times the bot has executed the code.
             MAIN_EXECUTIONS++;
             // Use recursion back to the top
             main();
-          }, 10000);
+          }, 1000 * 20);
         }
         ).catch(function(err) {
           console.log("Caught error during disconnect:", err);
