@@ -16,11 +16,9 @@ const SPECTRE_REPLIES = ["All Im telling u is the truth!", "Which pill do u pref
  "If I need a new ability, I'll just grab it from the net!", "There's light in the darkness",
  "The red pill or the blue pill?"];
 
-const SPECTRE_JOIN_MSGS = ["This your last chance. After this there is " +
-          "no turning back. You take the blue pill, the story ends." +
-          " You wake up in your bed and believe whatever you want to." +
-          " You take the red pill, you stay in Wonderland, and I show " +
-          " you how deep the rabbit hole goes.",
+const SPECTRE_JOIN_MSGS = ["This is your last chance. After this, there is no turning back. " +
+          "You take the blue pill - the story ends, you wake up in your bed and believe whatever " +
+          " you want to believe. You take the red pill - you stay in Wonderland and I show you how deep the rabbit-hole goes",
           "sup guys, what's going on here?", //Some random casual msgs to not get flagged for spam
           "hi", "=)", "hi!", "^^", "hello"];
 
