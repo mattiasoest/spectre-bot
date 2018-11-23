@@ -122,7 +122,7 @@ function main() {
         sendMsgToTheBotChannel(client, SPECTRE_JOIN_MSGS[0]);
         console.log("\nDISCONNECTING... PREPARING NEW CONNECTIONS!\n");
         // After successfull disconnect go back to top of main()
-        client.disconnect().then(function () {
+        client.disconnect().then(async function () {
           // Reset all streamer data arrays
           FIRST_FETCHED_STREAMERS = [];
           STREAM_CONNECTIONS      = [];
