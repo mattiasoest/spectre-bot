@@ -133,11 +133,14 @@ function main() {
           STILL_COLLECTING  = true;
           SEND_EACH_TIME    = true;
           console.log("\nALL DATA HAS BEEN RESET...\n");
+          // Just get 1 channel and get the amount of streamers field.
+          let result = await getStreamerData(1, 0);
+          let msg = "There are currently" + result._total +
+          " LIVE channels on Twitch. Joining a few random ones shortly..."
+          twitter_handle.tweet({status : msg});
           // Just wait a few seconds if we want to tweet or something to let all tweets get through
           // probably is enough with 1-2 sec but theres no rush.
           setTimeout(function() {
-            let msg = "Preparing to join some new random channels, stay tuned!";
-            twitter_handle.tweet({status : msg});
             // Keep track of how many times the bot has executed the code.
             MAIN_EXECUTIONS++;
             // Use recursion back to the top
