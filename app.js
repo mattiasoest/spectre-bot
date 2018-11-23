@@ -23,7 +23,8 @@ const SPECTRE_JOIN_MSGS = ["This is your last chance. After this, there is no tu
           "hi", "=)", "hi!", "^^", "hello"];
 
 const SPECTRE_OWN_CHANNEL_MSG = ["Nothing happens here, check my https://twitter.com/" + config.userName + " to see where Im at...",
-          "?" + config.userName + " in the chat.", "Lurking in the shadows...", "MrDestructoid"]
+          "?" + config.userName + " in the chat.", "Lurking in the shadows...", "MrDestructoid",
+          "I'm trying to free your mind, Neo. But I can only show you the door. You're the one that has to walk through it"]
 
 const MANY_VIEWERS                 = 575000;
 const FEW_VIEWERS                  = 320000;
