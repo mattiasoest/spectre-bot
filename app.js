@@ -140,8 +140,8 @@ function runBot() {
         console.log("\nALL DATA HAS BEEN RESET...\n");
         // Just get 1 channel and get the amount of streamers field.
         let result = await getStreamerData(1, 0);
-        let msg = "There are currently" + result._total +
-        " LIVE channels on Twitch. Joining a few random ones shortly..."
+        let msg = "There are currently " + result._total +
+        " LIVE channels  @ https://www.twitch.tv/ \n Joining a few random ones shortly..."
         twitter_handle.tweet({status : msg});
         // Just wait a few seconds if we want to tweet or something to let all tweets get through
         // probably is enough with 1-2 sec but theres no rush.
