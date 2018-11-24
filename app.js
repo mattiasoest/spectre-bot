@@ -60,113 +60,110 @@ var CURRENT_LIVE_CHANNELS   = 0;
 main();
 // ============================================================================
 
-// Implementation
 function main() {
   console.log("======= Starting main() execution number: " + MAIN_EXECUTIONS + " =======");
-  populateStreamerArrays().then(function () {
-    // If the offset is 0 then we requesting the top channels
-    // If mistakes r made during testing dont tweet out bad stats
-    // This tweet is based on  calculations based on the top 100 streamers
-    // which requires INITIAL_REQUEST_OFFSET to be 0
-    if (INITIAL_REQUEST_OFFSET === 0) {
-      let currentViewersText = createCurrentViewersText();
-      let viewersTweet = { status : currentViewersText };
-      twitter_handle.tweet(viewersTweet);
-      console.log("Current Top 100 viewers: ", TOP_100_STREAMERS);
-      console.log("\n============TWEETED CURRENT VIEWERS STATS============\n");
-    }
-    updateMsgLimits();
-    var options = createOptions();
-    var client = new tmi.client(options);
-    registerListeners(client);
-    let trackingStreamersTweet = createJoiningInfoTweet();
-    twitter_handle.tweet(trackingStreamersTweet);
-    console.log("Preparing connection to:", STREAM_CONNECTIONS);
-    console.log("===================================================");
-    console.log("AMOUNT OF STREAMERS IN THE ARRAY: ", STREAM_CONNECTIONS.length);
-    console.log("===================================================");
-    client.connect();
-
-    setTimeout(function() {
-    // Keep the connections until LIVE_TIME has passed and then reset everything
-    // Rejoin STREAMS_TO_BE_TRACKED channels after specific time
-      for (streamer of STREAMERS) {
-        // For example key 'Kappa' sort by values and get the keys to be able to access
-        // the emote in the streamer object, collect them all sorted in a new array
-        let emoteKeysSorted = Object.keys(streamer.emotes).sort(function(a,b){return streamer.emotes[b]-streamer.emotes[a]});
-        let tweetText = createEphTweetText(streamer, emoteKeysSorted);
-        // Very RARE case all emotes needs to hit 4-digit numbers
-        // amd we have to delete one element
-        while (tweetText.length > 280) {
-          console.log("Too many characters in the Emotes Tweet... deleting the last element.");
-           // Adjust the array by deleting 1 element each iteration
-           // until we're in a tweet friendly range of characters
-           // Delete from the back to get rid of less used emotes first
-          emoteKeysSorted.pop();
-          tweetText = createEphTweetText(streamer, emoteKeysSorted);
-        }
-        twitter_handle.tweetImage(streamer.logo, tweetText);
-        console.log("===================================================");
-        console.log(streamer.displayName);
-        console.log("Collected: ");
-        console.log(streamer.emotes);
-        sendMsgToTheBotChannel(client, tweetText);
-      }
-      // Stats has been tweeted, now chill in the streams for a bit
-      // Hang around streams and idle before connection to new streamers
-      // It take roughly 20-25 mins to connect to 500 streams so dont waste it.
-      // Last test 20 mins 630 streamers... KEEP TRACK OF THIS
-      // We dont want to spam twitter too much anyway.
-      // 2 more hours lurking
-      setTimeout(function() {
-        sendMsgToTheBotChannel(client, SPECTRE_JOIN_MSGS[0]);
-        console.log("\nDISCONNECTING... PREPARING NEW CONNECTIONS!\n");
-        // After successfull disconnect go back to top of main()
-        client.disconnect().then(async function () {
-          // Reset all streamer data arrays
-          FIRST_FETCHED_STREAMERS = [];
-          STREAM_CONNECTIONS      = [];
-          STREAMERS               = [];
-          // ==========================
-          STREAMERS_JOINED  = 0;
-          REPLY_MSGS_SENT   = 0;
-          FAILED_REPLY_SENT = 0;
-          STILL_COLLECTING  = true;
-          SEND_EACH_TIME    = true;
-          console.log("\nALL DATA HAS BEEN RESET...\n");
-          // Just get 1 channel and get the amount of streamers field.
-          let result = await getStreamerData(1, 0);
-          let msg = "There are currently" + result._total +
-          " LIVE channels on Twitch. Joining a few random ones shortly..."
-          twitter_handle.tweet({status : msg});
-          // Just wait a few seconds if we want to tweet or something to let all tweets get through
-          // probably is enough with 1-2 sec but theres no rush.
-          setTimeout(function() {
-            // Keep track of how many times the bot has executed the code.
-            MAIN_EXECUTIONS++;
-            // Use recursion back to the top
-            main();
-          }, 1000 * 20);
-        }
-        ).catch(function(err) {
-          console.log("Caught error during disconnect:", err);
-        });
-
-      }, LURKING_LIVE_TIME);
-
-      sendMsgToTheBotChannel(client, SPECTRE_JOIN_MSGS[0]);
-      console.log("\nCollection done! No more tracking of emotes!\n");
-      STILL_COLLECTING = false;
-      // Send the last msg before we disconnect.
-      // TODO CANT BROADCAST CUZ WE PROLLY OVERFLOW THE CLIENT WITH RESPONSES
-      // CUZ WE DONT FOLLOW/SUBBING TO THE CHANNELS TO WE
-      // GOT DCED TWICE NOW
-      // broadcastMsg(client, "=)", client.getChannels());
-    }, EMOTE_COLLETION_LIVE_TIME);
-  });
+  populateStreamerArrays().then(runBot);
 }
 
+// Larger execution functions
 // ============================================================================
+function runBot() {
+  // If the offset is 0 then we requesting the top channels
+  // If mistakes r made during testing dont tweet out bad stats
+  // This tweet is based on  calculations based on the top 100 streamers
+  // which requires INITIAL_REQUEST_OFFSET to be 0
+  if (INITIAL_REQUEST_OFFSET === 0) {
+    let currentViewersText = createCurrentViewersText();
+    let viewersTweet = { status : currentViewersText };
+    twitter_handle.tweet(viewersTweet);
+    console.log("Current Top 100 viewers: ", TOP_100_STREAMERS);
+    console.log("\n============TWEETED CURRENT VIEWERS STATS============\n");
+  }
+  updateMsgLimits();
+  var options = createOptions();
+  var client = new tmi.client(options);
+  registerListeners(client);
+  let trackingStreamersTweet = createJoiningInfoTweet();
+  twitter_handle.tweet(trackingStreamersTweet);
+  console.log("Preparing connection to:", STREAM_CONNECTIONS);
+  console.log("===================================================");
+  console.log("AMOUNT OF STREAMERS IN THE ARRAY: ", STREAM_CONNECTIONS.length);
+  console.log("===================================================");
+  client.connect();
+
+  setTimeout(function() {
+  // Keep the connections until LIVE_TIME has passed and then reset everything
+  // Rejoin STREAMS_TO_BE_TRACKED channels after specific time
+    for (streamer of STREAMERS) {
+      // For example key 'Kappa' sort by values and get the keys to be able to access
+      // the emote in the streamer object, collect them all sorted in a new array
+      let emoteKeysSorted = Object.keys(streamer.emotes).sort(function(a,b){return streamer.emotes[b]-streamer.emotes[a]});
+      let tweetText = createEphTweetText(streamer, emoteKeysSorted);
+      // Very RARE case all emotes needs to hit 4-digit numbers
+      // amd we have to delete one element
+      while (tweetText.length > 280) {
+        console.log("Too many characters in the Emotes Tweet... deleting the last element.");
+         // Adjust the array by deleting 1 element each iteration
+         // until we're in a tweet friendly range of characters
+         // Delete from the back to get rid of less used emotes first
+        emoteKeysSorted.pop();
+        tweetText = createEphTweetText(streamer, emoteKeysSorted);
+      }
+      twitter_handle.tweetImage(streamer.logo, tweetText);
+      console.log("===================================================");
+      console.log(streamer.displayName);
+      console.log("Collected: ");
+      console.log(streamer.emotes);
+      sendMsgToTheBotChannel(client, tweetText);
+    }
+    // Stats has been tweeted, now chill in the streams for a bit
+    // Hang around streams and idle before connection to new streamers
+    // It take roughly 20-25 mins to connect to 500 streams so dont waste it.
+    // Last test 20 mins 630 streamers... KEEP TRACK OF THIS
+    // We dont want to spam twitter too much anyway.
+    // 2 more hours lurking
+    setTimeout(function() {
+      sendMsgToTheBotChannel(client, SPECTRE_JOIN_MSGS[0]);
+      console.log("\nDISCONNECTING... PREPARING NEW CONNECTIONS!\n");
+      // After successfull disconnect go back to top of main()
+      client.disconnect().then(async function () {
+        // Reset all streamer data arrays
+        FIRST_FETCHED_STREAMERS = [];
+        STREAM_CONNECTIONS      = [];
+        STREAMERS               = [];
+        // ==========================
+        STREAMERS_JOINED  = 0;
+        REPLY_MSGS_SENT   = 0;
+        FAILED_REPLY_SENT = 0;
+        STILL_COLLECTING  = true;
+        SEND_EACH_TIME    = true;
+        console.log("\nALL DATA HAS BEEN RESET...\n");
+        // Just get 1 channel and get the amount of streamers field.
+        let result = await getStreamerData(1, 0);
+        let msg = "There are currently" + result._total +
+        " LIVE channels on Twitch. Joining a few random ones shortly..."
+        twitter_handle.tweet({status : msg});
+        // Just wait a few seconds if we want to tweet or something to let all tweets get through
+        // probably is enough with 1-2 sec but theres no rush.
+        setTimeout(function() {
+          // Keep track of how many times the bot has executed the code.
+          MAIN_EXECUTIONS++;
+          // Use recursion back to the top
+          main();
+        }, 1000 * 20);
+      }
+      ).catch(function(err) {
+        console.log("Caught error during disconnect:", err);
+      });
+
+    }, LURKING_LIVE_TIME);
+
+    sendMsgToTheBotChannel(client, SPECTRE_JOIN_MSGS[0]);
+    console.log("\nCollection done! No more tracking of emotes!\n");
+    STILL_COLLECTING = false;
+  }, EMOTE_COLLETION_LIVE_TIME);
+}
+
 function registerListeners(client) {
 
   // Triggered once joined.
@@ -269,7 +266,7 @@ function registerListeners(client) {
         }
       }
     }
-});
+  });
 
   // Adress looks something like
   // irc-ws.chat.twitch.tv
