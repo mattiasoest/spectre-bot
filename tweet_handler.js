@@ -11,13 +11,11 @@ var twit = new Twit({
   strictSSL:            true,     // optional - requires SSL certificates to be valid.
 });
 
-
-// MAX CHARS PER TWEET 280
+// ! Max chars per tweet is 280.
 exports.tweet = function(tweet) {
   tweetHelper(tweet);
 }
 
-// MAX CHARS PER TWEET 280 + IMAGE
 exports.tweetImage = function(b64Image, imageText) {
     twit.post('media/upload', { media_data: b64Image }, (err, data, res) => {
       if (err) {
