@@ -80,8 +80,8 @@ function runBot() {
     console.log("\n============TWEETED CURRENT VIEWERS STATS============\n");
   }
   updateMsgLimits();
-  var options = createOptions();
-  var client = new tmi.client(options);
+  let options = createOptions();
+  let client = new tmi.client(options);
   registerListeners(client);
   let trackingStreamersTweet = createJoiningInfoTweet();
   twitter_handle.tweet(trackingStreamersTweet);
@@ -371,12 +371,12 @@ async function randomlyPopulateSelectedStreamers() {
       let randomIndex = Math.floor(Math.random() * fetchedCopy.length);
       // Pick random streamer and delete him at the same time
       // from the original array
-      var streamerData = fetchedCopy.splice(randomIndex, 1)[0];
+      let streamerData = fetchedCopy.splice(randomIndex, 1)[0];
       // Only add the BIG streamers which we gonna track to the connection array
       // So STREAMS_TO_BE_TRACKED big channels and if it works 4-6k small channels
       STREAM_CONNECTIONS.push("#" + streamerData.name);
       console.log("--------- Randomly picked streamer:", streamerData.name);
-      var updatedStreamer =  await addAdditionalAttributes(streamerData);
+      let updatedStreamer =  await addAdditionalAttributes(streamerData);
       // Add just the name to the array used to connect
       STREAMERS.push(updatedStreamer);
       console.log("--------- Pushed streamer data:", updatedStreamer.displayName);
@@ -395,8 +395,8 @@ function parsedFetchedArray(body, firstFetch) {
   }
 
   let counter = 0;
-  for (var i = 0; i < body.streams.length; i++) {
-    var streamer = {};
+  for (let i = 0; i < body.streams.length; i++) {
+    let streamer = {};
     streamer.name = body.streams[i].channel.name;
     if (firstFetch) {
       streamer.displayName = body.streams[i].channel.display_name;
@@ -413,7 +413,7 @@ function parsedFetchedArray(body, firstFetch) {
 }
 
 function getStreamerData(limit, offset) {
-  var options = {
+  let options = {
     url: 'https://api.twitch.tv/kraken/streams?limit=' + limit + '&language=en&offset=' + offset,
     json: true,
     headers: {
@@ -432,8 +432,8 @@ function getStreamerData(limit, offset) {
         // console.log('statusCode:', res.statusCode); // Print the response status code if a response was received
         resolve(body);
       }
-      });
     });
+  });
 }
 
 async function populateStreamerArrays() {
@@ -466,7 +466,6 @@ async function populateStreamerArrays() {
   } catch (error) {
       console.log("Error:", error);
   }
-  return;
 }
 
 function createOptions() {
@@ -488,7 +487,7 @@ function createOptions() {
 async function addAdditionalAttributes(streamer) {
     try {
       console.log("Downloading logo for streamer :", streamer.name);
-      var imageLogo = await downloadFile(streamer.logoUrl);
+      let imageLogo = await downloadFile(streamer.logoUrl);
       streamer.logo = imageLogo;
     } catch (error) {
         console.log("Error:", error);
@@ -531,13 +530,12 @@ function broadcastMsg(client, message, connectionArray) {
 }
 
 function downloadFile(url) {
-    var opts = {url, encoding: 'base64'}
+    let opts = {url, encoding: 'base64'}
     return new Promise((resolve, reject) => {
       request(opts, (err, res, body) => {
         if (err) {
           console.log(err);  // Log the error if one occurred
           reject("ERROR code for image logo download" + res.statusCode);
-          return;
         }
         else {
           console.log('statusCode for image logo download:', res.statusCode); // Print the response status code if a response was received
