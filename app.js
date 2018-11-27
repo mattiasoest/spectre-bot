@@ -91,13 +91,13 @@ function runBot() {
   console.log("===================================================");
   client.connect();
 
-  setTimeout(function() {
+  setTimeout(() => {
   // Keep the connections until LIVE_TIME has passed and then reset everything
   // Rejoin STREAMS_TO_BE_TRACKED channels after specific time
     for (streamer of STREAMERS) {
       // For example key 'Kappa' sort by values and get the keys to be able to access
       // the emote in the streamer object, collect them all sorted in a new array
-      let emoteKeysSorted = Object.keys(streamer.emotes).sort(function(a,b){return streamer.emotes[b]-streamer.emotes[a]});
+      let emoteKeysSorted = Object.keys(streamer.emotes).sort((a,b) => {return streamer.emotes[b]-streamer.emotes[a]});
       let tweetText = createEphTweetText(streamer, emoteKeysSorted);
       // Very RARE case all emotes needs to hit 4-digit numbers
       // amd we have to delete one element
@@ -122,7 +122,7 @@ function runBot() {
     // Last test 20 mins 630 streamers... KEEP TRACK OF THIS
     // We dont want to spam twitter too much anyway.
     // 2 more hours lurking
-    setTimeout(function() {
+    setTimeout(() => {
       sendMsgToTheBotChannel(client, SPECTRE_JOIN_MSGS[0]);
       console.log("\nDISCONNECTING... PREPARING NEW CONNECTIONS!\n");
       // After successfull disconnect go back to top of main()
@@ -145,14 +145,14 @@ function runBot() {
         twitter_handle.tweet({status : msg});
         // Just wait a few seconds if we want to tweet or something to let all tweets get through
         // probably is enough with 1-2 sec but theres no rush.
-        setTimeout(function() {
+        setTimeout(() => {
           // Keep track of how many times the bot has executed the code.
           MAIN_EXECUTIONS++;
           // Use recursion back to the top
           main();
         }, 1000 * 20);
       }
-      ).catch(function(err) {
+    ).catch((err) => {
         console.log("Caught error during disconnect:", err);
       });
 
@@ -421,8 +421,8 @@ function getStreamerData(limit, offset) {
       }
   };
 
-  return new Promise(function(resolve, reject) {
-    request(options, function(err, res, body) {
+  return new Promise((resolve, reject) => {
+    request(options, (err, res, body) => {
       if (err) {
         console.log(err);  // Log the error if one occurred
         reject("ERROR" + res.statusCode);
@@ -532,8 +532,8 @@ function broadcastMsg(client, message, connectionArray) {
 
 function downloadFile(url) {
     var opts = {url, encoding: 'base64'}
-    return new Promise(function(resolve, reject) {
-      request(opts, function(err, res, body) {
+    return new Promise((resolve, reject) => {
+      request(opts, (err, res, body) => {
         if (err) {
           console.log(err);  // Log the error if one occurred
           reject("ERROR code for image logo download" + res.statusCode);
@@ -558,7 +558,7 @@ function createEphTweetText(streamer, emoteKeys) {
 
 function createJoiningInfoTweet() {
     // Local helper function
-    let createMsg = function(streamsArray) {
+    let createMsg = (streamsArray) => {
       let msg = "";
       for (streamer of streamsArray) {
         msg += "#" + streamer.name + " ";
