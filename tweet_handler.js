@@ -22,7 +22,7 @@ exports.tweetImage = function(b64Image, imageText) {
         console.log("ERROR POSTING TWEET:", err);
       }
       else {
-        var tweet = {
+        let tweet = {
           status: imageText,
           media_ids: [data.media_id_string]
         }
