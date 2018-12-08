@@ -42,7 +42,7 @@ const EMOTE_COLLETION_LIVE_TIME    = 1000*60*60 * NUMBER_OF_HOURS_COLLECTING;
 const LURKING_LIVE_TIME            = 1000*60*60 * NUMBER_OF_HOURS_COLLECTING * 1.75;
 const ALLOWED_TO_CHAT_PUBLICLY     = false;
 // =============NOT CONSTANTS=============================================================
-var CHAT_LIMIT              = 900; //Maye change during execution.
+var CHAT_LIMIT              = 900; //May change during execution.
 var TOP_100_STREAMERS       = 0;
 var STREAMERS_JOINED        = 0;
 var REPLY_MSGS_SENT         = 0;
@@ -116,12 +116,8 @@ function runBot() {
       console.log(streamer.emotes);
       sendMsgToTheBotChannel(client, tweetText);
     }
-    // Stats has been tweeted, now chill in the streams for a bit
+    // Stats has been tweeted
     // Hang around streams and idle before connection to new streamers
-    // It take roughly 20-25 mins to connect to 500 streams so dont waste it.
-    // Last test 20 mins 630 streamers... KEEP TRACK OF THIS
-    // We dont want to spam twitter too much anyway.
-    // 2 more hours lurking
     setTimeout(() => {
       sendMsgToTheBotChannel(client, SPECTRE_JOIN_MSGS[0]);
       console.log("\nDISCONNECTING... PREPARING NEW CONNECTIONS!\n");
@@ -219,10 +215,8 @@ function registerListeners(client) {
   });
 
   client.on("chat", function(channel, user, message, self) {
-    // For some reason the self didnt work when I interested
-    // Add additional check
+    // Ignore the bot's msg's
     if (self || user.username === config.userName) {
-      // Ignore the bot's msg's
       return;
     }
     if (message.toLowerCase().includes("?" + config.userName)) {
@@ -309,49 +303,6 @@ function registerListeners(client) {
                 // break;
         // }
     });
-
-  // JUST ADD THERE EVENTS SO THE BOT IS PREPARED AND DONT GET UGLY ERRORS IN THE LOG
-  client.on("cheer", function (channel, userstate, message) {
-  });
-  client.on("action", function (channel, userstate, message, self) {
-    if (self) return;
-  });
-  client.on("clearchat", function (channel) {
-  });
-  client.on("emoteonly", function (channel, enabled) {
-  });
-  client.on("emotesets", function(sets, obj) {
-    // Here are the emotes I can use:
-    // console.log(obj);
-  });
-  client.on("followersonly", function (channel, enabled, length) {
-  });
-  client.on("hosted", function (channel, username, viewers, autohost) {
-  });
-  client.on("mod", function (channel, username) {
-  });
-  client.on("mods", function (channel, mods) {
-  });
-  client.on("serverchange", function (channel) {
-  });
-  client.on("slowmode", function (channel, enabled, length) {
-  });
-  client.on("subscribers", function (channel, enabled) {
-  });
-  client.on("unmod", function (channel, username) {
-  });
-  client.on("unhost", function (channel, viewers) {
-  });
-  client.on("timeout", function (channel, username, reason, duration) {
-  });
-  client.on("r9kbeta", function (channel, enabled) {
-  });
-  client.on("pong", function (latency) {
-  });
-  client.on("ping", function () {
-  });
-  client.on("notice", function (channel, msgid, message) {
-  });
 }
 
 //=============================================================
@@ -387,7 +338,6 @@ async function randomlyPopulateSelectedStreamers() {
 }
 
 function parsedFetchedArray(body, firstFetch) {
-  // console.log('body---->>', body);
   if (firstFetch) {
     CURRENT_LIVE_CHANNELS = body._total;
     console.log('Number of streamers fetched:', body.streams.length);
@@ -424,12 +374,11 @@ function getStreamerData(limit, offset) {
   return new Promise((resolve, reject) => {
     request(options, (err, res, body) => {
       if (err) {
-        console.log(err);  // Log the error if one occurred
+        console.log(err);
         reject("ERROR" + res.statusCode);
         return;
       }
       else {
-        // console.log('statusCode:', res.statusCode); // Print the response status code if a response was received
         resolve(body);
       }
     });
@@ -448,8 +397,8 @@ async function populateStreamerArrays() {
       randomlyPopulateSelectedStreamers();
       // 100 streams took 3-5 mins
       // 1000 streams took 34 mins.
-      // Mix offsett a little
-      // These small channels will proably go on and offline so get ALOT of them
+      // Mix offset a little
+      // These small channels will probably go on and offline so get ALOT of them
       let offset = getOffset();
       let requestAmount = getAmountOfRequests(offset);
       console.log("--------- Offset set to: " + offset);
@@ -516,11 +465,7 @@ async function addAdditionalAttributes(streamer) {
 }
 
 // BE CAREFUL WITH THIS IF WE JOIN ALOT OF channels
-// use client.getChannels() or target the beginning
-// of the STREAM_CONNECTIONS, for example top 100
-// ===== For exmaple 100 streams take 3-5 mins to connect
-// 1000 took 34 mins during testing
-// dont use STREAM_CONNECTIONS until you're sure u joined.
+// use client.getChannels() to broadcast
 function broadcastMsg(client, message, connectionArray) {
   for (streamerChannel of connectionArray) {
     client.action(streamerChannel, message);
