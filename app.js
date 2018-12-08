@@ -274,7 +274,7 @@ function registerListeners(client) {
   client.on('disconnected', function(reason){
     SEND_EACH_TIME = false;
     console.log("Disconnected:", reason)
-    console.log("Got disconnected chill with the join msg's, set SEND_EACH_TIME = false");
+    console.log("Got disconnected, stop sending join msg's. Setting SEND_EACH_TIME = false");
   });
 
   // TODO Add functionality
@@ -423,7 +423,8 @@ function createOptions() {
       debug : false
     },
     connection : {
-      reconnect : true
+      reconnect : true,
+      reconnectInterval : 2500
     },
     identity : {
       username : config.userName,
