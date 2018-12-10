@@ -145,7 +145,7 @@ function runBot() {
           // Keep track of how many times the bot has executed the code.
           MAIN_EXECUTIONS++;
           // Use recursion back to the top
-          main();
+          return main();
         }, 1000 * 20);
       }
     ).catch((err) => {
