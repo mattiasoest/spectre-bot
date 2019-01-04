@@ -35,11 +35,12 @@ const SMALL_STREAMER_START_OFFSET  = 12000;
 const INITIAL_REQUEST_OFFSET       = 0;
 // 10 streams is good amount for data and tweeting reasons
 const STREAMS_TO_BE_TRACKED        = 5;
-const EMOTE_COLLETION_LIVE_TIME    = 1000*60*60 * NUMBER_OF_HOURS_COLLECTING;
+const EMOTE_COLLECTION_LIVE_TIME   = 1000 * 60 * 60 * NUMBER_OF_HOURS_COLLECTING;
 // Just for expore to get ppl interested, lurking in streams with 1-20 viewers
 // Like who is this guy? and then clicks on the nickname, sees profile sees, sees twitter
 // Guerilla marketing without spamming
-const LURKING_LIVE_TIME            = 1000*60*60 * NUMBER_OF_HOURS_COLLECTING * 1.75;
+const LURKING_LIVE_TIME            = 1000* 60 * 60 * NUMBER_OF_HOURS_COLLECTING * 1.75;
+const INTERVAL_DIFF                = 1000 * 60 * 2;
 const ALLOWED_TO_CHAT_PUBLICLY     = false;
 // =============NOT CONSTANTS=============================================================
 var CHAT_LIMIT              = 900; //May change during execution.
@@ -52,7 +53,7 @@ var STREAM_CONNECTIONS      = [];
 var STREAMERS               = [];
 var STILL_COLLECTING        = true;
 var SEND_EACH_TIME          = true;
-var MAIN_EXECUTIONS         = 0;
+var MAIN_EXECUTIONS         = 1;
 var CURRENT_LIVE_CHANNELS   = 0;
 
 // ============================================================================
@@ -60,9 +61,29 @@ var CURRENT_LIVE_CHANNELS   = 0;
 main();
 // ============================================================================
 
+// TODO TWEETS
 function main() {
-  console.log("======= Starting main() execution number: " + MAIN_EXECUTIONS + " =======");
   populateStreamerArrays().then(runBot);
+  setInterval(() => {
+    // Reset all streamer data arrays
+    FIRST_FETCHED_STREAMERS = [];
+    STREAM_CONNECTIONS      = [];
+    STREAMERS               = [];
+    // ==========================
+    STREAMERS_JOINED  = 0;
+    REPLY_MSGS_SENT   = 0;
+    FAILED_REPLY_SENT = 0;
+    STILL_COLLECTING  = true;
+    SEND_EACH_TIME    = true;
+    // Keep track of how many times the bot has executed the code.
+    MAIN_EXECUTIONS++;
+    console.log("\nALL DATA HAS BEEN RESET...\n");
+    // console.log("======= Starting main() execution number: " + MAIN_EXECUTIONS + " =======");
+    populateStreamerArrays().then(runBot);
+
+  }, LURKING_LIVE_TIME + EMOTE_COLLECTION_LIVE_TIME + INTERVAL_DIFF);
+
+  console.log("======= Starting main() execution number: " + MAIN_EXECUTIONS + " =======");
 }
 
 // Larger execution functions
@@ -79,6 +100,7 @@ function runBot() {
     console.log("Current Top 100 viewers: ", TOP_100_STREAMERS);
     console.log("\n============TWEETED CURRENT VIEWERS STATS============\n");
   }
+
   updateMsgLimits();
   let options = createOptions();
   let client = new tmi.client(options);
@@ -123,41 +145,22 @@ function runBot() {
       console.log("\nDISCONNECTING... PREPARING NEW CONNECTIONS!\n");
       // After successfull disconnect go back to top of main()
       client.disconnect().then(async function () {
-        // Reset all streamer data arrays
-        FIRST_FETCHED_STREAMERS = [];
-        STREAM_CONNECTIONS      = [];
-        STREAMERS               = [];
-        // ==========================
-        STREAMERS_JOINED  = 0;
-        REPLY_MSGS_SENT   = 0;
-        FAILED_REPLY_SENT = 0;
-        STILL_COLLECTING  = true;
-        SEND_EACH_TIME    = true;
-        console.log("\nALL DATA HAS BEEN RESET...\n");
+
         // Just get 1 channel and get the amount of streamers field.
         let result = await getStreamerData(1, 0);
         let msg = "There are currently " + result._total +
         " LIVE channels  @ https://www.twitch.tv/ \n Joining a few random ones shortly..."
         twitter_handle.tweet({status : msg});
-        // Just wait a few seconds if we want to tweet or something to let all tweets get through
-        // probably is enough with 1-2 sec but theres no rush.
-        setTimeout(() => {
-          // Keep track of how many times the bot has executed the code.
-          MAIN_EXECUTIONS++;
-          // Use recursion back to the top
-          return main();
-        }, 1000 * 20);
       }
     ).catch((err) => {
         console.log("Caught error during disconnect:", err);
       });
-
     }, LURKING_LIVE_TIME);
 
     sendMsgToTheBotChannel(client, SPECTRE_JOIN_MSGS[0]);
     console.log("\nCollection done! No more tracking of emotes!\n");
     STILL_COLLECTING = false;
-  }, EMOTE_COLLETION_LIVE_TIME);
+  }, EMOTE_COLLECTION_LIVE_TIME);
 }
 
 function registerListeners(client) {
