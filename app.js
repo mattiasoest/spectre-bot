@@ -98,13 +98,15 @@ function runBot() {
   // If mistakes r made during testing dont tweet out bad stats
   // This tweet is based on  calculations based on the top 100 streamers
   // which requires INITIAL_REQUEST_OFFSET to be 0
-  if (INITIAL_REQUEST_OFFSET === 0) {
-    let currentViewersText = createCurrentViewersText();
-    let viewersTweet = { status : currentViewersText };
-    twitter_handle.tweet(viewersTweet);
-    console.log("Current Top 100 viewers: ", TOP_100_STREAMERS);
-    console.log("\n============TWEETED CURRENT VIEWERS STATS============\n");
-  }
+
+  // Cant get this data from the the HELIX api
+  // if (INITIAL_REQUEST_OFFSET === 0) {
+  //   let currentViewersText = createCurrentViewersText();
+  //   let viewersTweet = { status : currentViewersText };
+  //   twitter_handle.tweet(viewersTweet);
+  //   console.log("Current Top 100 viewers: ", TOP_100_STREAMERS);
+  //   console.log("\n============TWEETED CURRENT VIEWERS STATS============\n");
+  // }
 
   updateMsgLimits();
   let options = createOptions();
@@ -346,33 +348,51 @@ async function randomlyPopulateSelectedStreamers() {
 }
 
 function parsedFetchedArray(body, firstFetch) {
-  if (firstFetch) {
-    CURRENT_LIVE_CHANNELS = body._total;
-    console.log('Number of streamers fetched:', body.streams.length);
-    console.log("===================================================");
-  }
+  // Cant access total viewews with latest API helix
+  // if (firstFetch) {
+  //   CURRENT_LIVE_CHANNELS = body._total;
+  //   console.log('Number of streamers fetched:', body.streams.length);
+  //   console.log("===================================================");
+  // }
 
-  let counter = 0;
-  for (let i = 0; i < body.streams.length; i++) {
-    let streamer = {};
-    streamer.name = body.streams[i].channel.name;
-    if (firstFetch) {
-      streamer.displayName = body.streams[i].channel.display_name;
-      streamer.logoUrl = body.streams[i].channel.logo;
-      streamer.url = body.streams[i].channel.url;
-      streamer.viewers = body.streams[i].viewers;
-      console.log("--------- Fetching streamer data from:", streamer.name);
-      FIRST_FETCHED_STREAMERS.push(streamer);
-    }
-    else {
-        STREAM_CONNECTIONS.push("#" + streamer.name);
-    }
+  // let counter = 0;
+  // for (let i = 0; i < body.length; i++) {
+  //   console.log(i);
+  //   let streamer = {};
+  //   streamer.name = body[i].user_name;
+  //   if (firstFetch) {
+  //     streamer.displayName = body[i].user_name;
+  //     streamer.logoUrl = body[i].thumbnail_url;
+  //     streamer.url = body[i].thumbnail_url;
+  //     streamer.viewers = body[i].viewer_count;
+  //     console.log("--------- Fetching streamer data from:", streamer.name);
+  //     FIRST_FETCHED_STREAMERS.push(streamer);
+  //   }
+  //   else {
+  //       STREAM_CONNECTIONS.push("#" + streamer.name);
+  //   }
+  // }
+
+    for (let streamerIndex in body.data) {
+      let streamer = {};
+      streamer.name = body.data[streamerIndex].user_name;
+      if (firstFetch) {
+        streamer.displayName = body.data[streamerIndex].user_name;
+        streamer.logoUrl = body.data[streamerIndex].thumbnail_url;
+        streamer.url = body.data[streamerIndex].thumbnail_url;
+        streamer.viewers = body.data[streamerIndex].viewer_count;
+        console.log("--------- Fetching streamer data from:", streamer.name);
+        FIRST_FETCHED_STREAMERS.push(streamer);
+      }
+      else {
+          STREAM_CONNECTIONS.push("#" + streamer.name);
+      }
   }
 }
 
 function getStreamerData(limit, offset) {
   let options = {
-    url: 'https://api.twitch.tv/kraken/streams?limit=' + limit + '&language=en&offset=' + offset,
+    url: 'https://api.twitch.tv/helix/streams?limit=' + limit + '&language=en&offset=' + offset,
     json: true,
     headers: {
         'Client-ID': config.clientId
