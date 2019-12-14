@@ -372,7 +372,7 @@ function parsedFetchedArray(body, firstFetch) {
 
 function getStreamerData(limit, offset) {
   let options = {
-    url: 'https://api.twitch.tv/kraken/streams?limit=' + limit + '&language=en&offset=' + offset,
+    url: 'https://api.twitch.tv/kraken/streams?limit=' + limit + '&language=en&offset=' + offset +'&api_version=5',
     json: true,
     headers: {
         'Client-ID': config.clientId
