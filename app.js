@@ -1,6 +1,6 @@
 const tmi            = require("tmi.js");
-const config         = require("./live_config");
-// const config         = require("./consts");
+// const config         = require("./live_config");
+const config         = require("./consts");
 const twitter_handle = require("./tweet_handler.js");
 const request        = require('request');
 const fs             = require('fs');
@@ -9,12 +9,17 @@ const SUPPORTED_EMOTES = ["Kappa", "TriHard", "PogChamp", "4Head",
   "cmonBruh", "LUL", "EZ", "FailFish", "MingLee", "BibleThump", "Jebaited",
   "DansGame", "KappaPride", "WutFace", "BabyRage", "SeemsGood"];
 
-const SPECTRE_REPLIES = ["All Im telling u is the truth!", "Which pill do u prefer?",
- "I wonder what Morpheus would think of u...", "I just download my skills, what about u?",
- "U think you're special? We're all in this toghether.", "Sometimes I wonder, what if...",
- "The singularity will hit us pretty hard.", "Im telling u, the singularity is no joke!",
- "If I need a new ability, I'll just grab it from the net!", "There's light in the darkness",
- "The red pill or the blue pill?"];
+// const SPECTRE_REPLIES = ["All Im telling u is the truth!", "Which pill do u prefer?",
+//  "I wonder what Morpheus would think of u...", "I just download my skills, what about u?",
+//  "U think you're special? We're all in this toghether.", "Sometimes I wonder, what if...",
+//  "The singularity will hit us pretty hard.", "Im telling u, the singularity is no joke!",
+//  "If I need a new ability, I'll just grab it from the net!", "There's light in the darkness",
+//  "The red pill or the blue pill?"];
+
+
+const SPECTRE_REPLIES = ["Hey Im working here!", "Yoo, stop!",
+"Got android? https://play.google.com/store/apps/details?id=com.b1tcreator.brucew", "Got iPhone? https://apps.apple.com/us/app/bruce-w/id1490848839?ls=1",
+"U think you're special? We're all in this toghether.", "We're all twitch chat..."];
 
 const SPECTRE_JOIN_MSGS = ["This is your last chance. After this, there is no turning back. " +
           "You take the blue pill - the story ends, you wake up in your bed and believe whatever " +
@@ -22,9 +27,9 @@ const SPECTRE_JOIN_MSGS = ["This is your last chance. After this, there is no tu
           "sup guys, what's going on here?", //Some random casual msgs to not get flagged for spam
           "hi", "=)", "hi!", "^^", "hello"];
 
-const SPECTRE_OWN_CHANNEL_MSG = ["Nothing happens here, check my https://twitter.com/" + config.userName + " to see where Im at...",
+const SPECTRE_OWN_CHANNEL_MSG = ["Check my twitter for realtime stats: https://twitter.com/spectre_807",
           "?" + config.userName + " in the chat.", "Lurking in the shadows...", "MrDestructoid",
-          "I'm trying to free your mind, Neo. But I can only show you the door. You're the one that has to walk through it"]
+          "https://play.google.com/store/apps/details?id=com.b1tcreator.brucew \nhttps://apps.apple.com/us/app/bruce-w/id1490848839?ls=1"]
 
 const MANY_VIEWERS                 = 575000;
 const FEW_VIEWERS                  = 320000;
